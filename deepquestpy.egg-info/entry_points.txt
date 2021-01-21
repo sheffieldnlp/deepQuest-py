@@ -1,3 +1,0 @@
-[console_scripts]
-deepquestpy-run-model = deepquestpy_cli.run_model:main
-

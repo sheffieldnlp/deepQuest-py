@@ -1,8 +1,0 @@
-numpy
-tqdm
-transformers
-scipy
-scikit-learn
-pandas
-tokenizers
-datasets

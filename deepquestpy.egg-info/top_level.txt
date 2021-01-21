@@ -1,2 +1,0 @@
-deepquestpy
-deepquestpy_cli
