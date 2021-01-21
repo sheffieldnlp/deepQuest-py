@@ -1,0 +1,29 @@
+Metadata-Version: 2.1
+Name: deepquestpy
+Version: 0.1.0
+Summary: Pytorch version of DeepQuest - a library for Quality Estimation
+Home-page: https://github.com/sheffieldnlp/deepQuest-py
+Author: SheffieldNLP
+License: UNKNOWN
+Description: # deepQuest-py. 
+        
+        This is an updated version of TransQuest that:
+        
+        - Uses the newest versions of the HuggingFace Transformers and Datasets libraries.
+        - Inclues models for Word-Level Quality Estimation.
+        
+        ## Instalation from Source
+        
+        ```
+        git clone https://github.com/sheffieldnlp/deepQuest-py.git
+        cd deepQuest-py
+        pip install --editable ./
+        ```
+        
+Platform: UNKNOWN
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
