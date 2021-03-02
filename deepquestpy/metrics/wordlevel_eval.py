@@ -37,6 +37,10 @@ def flatten(lofl):
 
 
 def compute_scores(gold_tags, pred_tags):
+    # Verify that there's the same number of tags for each instance
+    for idx, (gold, pred) in enumerate(zip(gold_tags, pred_tags)):
+        assert len(gold) == len(pred), f"Numbers of tags don't match in sequence {idx}: {len(gold)} and {len(pred)}"
+
     flat_gold = flatten(gold_tags)
     flat_pred = flatten(pred_tags)
 
