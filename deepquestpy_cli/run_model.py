@@ -29,6 +29,7 @@ from transformers import (
     AutoTokenizer,
     DataCollatorForTokenClassification,
     HfArgumentParser,
+    PreTrainedTokenizerFast,
     Trainer,
     TrainingArguments,
     set_seed,
@@ -107,38 +108,31 @@ def tokenize_and_align_labels(examples, tokenizer, padding, label_to_id, label_a
         truncation=True,
         # We use this argument because the texts in our dataset are lists of words (with a label for each word).
         is_split_into_words=True,
-        return_offsets_mapping=True,
     )
     tokenized_inputs["length_source"] = [len(label_src) for label_src in examples["src_tags"]]
-    offset_mappings = tokenized_inputs.pop("offset_mapping")
-    input_ids_all = tokenized_inputs["input_ids"]
     labels_word = []
     labels_sent = []
-    for hter, label_src, label_tgt, input_ids, offset_mapping in zip(
-        examples["hter"], examples["src_tags"], examples["tgt_tags"], input_ids_all, offset_mappings
-    ):
+    for i, (hter, label_src, label_tgt) in enumerate(zip(examples["hter"], examples["src_tags"], examples["tgt_tags"])):
         # remove the labels for GAPS in target
         if labels_in_gaps:
             label_tgt = [l for i, l in enumerate(label_tgt) if i % 2 != 0]
         label = label_src + label_tgt
-        label_index = 0
-        current_label = -100
+        word_ids = tokenized_inputs.word_ids(batch_index=i)
+        previous_word_idx = None
         label_ids = []
-        for input_id, offset in zip(input_ids, offset_mapping):
-            # We set the label for the first token of each word. Special characters will have an offset of (0, 0)
-            # so the test ignores them.
-            # TODO: Very specific to XLM-Roberta tokenization. How to generalise?
-            if offset[0] == 0 and offset[1] != 0 and tokenizer.convert_ids_to_tokens(input_id) != "▁":
-                current_label = label_to_id[label[label_index]]
-                label_index += 1
-                label_ids.append(current_label)
-            # For special tokens, we set the label to -100 so it's automatically ignored in the loss function.
-            elif offset[0] == 0 and offset[1] == 0:
+        for word_idx in word_ids:
+            # Special tokens have a word id that is None. We set the label to -100 so they are automatically
+            # ignored in the loss function.
+            if word_idx is None:
                 label_ids.append(-100)
+            # We set the label for the first token of each word.
+            elif word_idx != previous_word_idx:
+                label_ids.append(label_to_id[label[word_idx]])
             # For the other tokens in a word, we set the label to either the current label or -100, depending on
             # the label_all_tokens flag.
             else:
-                label_ids.append(current_label if label_all_tokens else -100)
+                label_ids.append(label_to_id[label[word_idx]] if label_all_tokens else -100)
+            previous_word_idx = word_idx
         labels_word.append(label_ids)
         labels_sent.append(hter)
     tokenized_inputs["labels"] = labels_word
@@ -240,6 +234,14 @@ def main(model_args, data_args, training_args):
             cache_dir=model_args.cache_dir,
         )
 
+    # Tokenizer check: this script requires a fast tokenizer.
+    if not isinstance(tokenizer, PreTrainedTokenizerFast):
+        raise ValueError(
+            "This script only works for models that have a fast tokenizer. Checkout the big table of models "
+            "at https://huggingface.co/transformers/index.html#bigtable to find the model types that meet this "
+            "requirement"
+        )
+
     # Preprocessing the dataset
     # Padding strategy
     padding = "max_length" if data_args.pad_to_max_length else False
@@ -274,12 +276,12 @@ def main(model_args, data_args, training_args):
         )
 
     # Data collator
-    data_collator = DataCollatorForJointClassification(tokenizer)
+    data_collator = DataCollatorForJointClassification(tokenizer, pad_to_multiple_of=8 if training_args.fp16 else None)
 
     if data_args.synthetic_train_dir:
         tokenized_train_data = tokenized_synthetic_data
     else:
-        tokenized_train_data = tokenized_datasets["train"] if training_args.do_train else None
+        tokenized_train_data = tokenized_datasets["train"]  # if training_args.do_train else None
 
     # Initialize Trainer
     trainer = Trainer(
@@ -312,13 +314,20 @@ def main(model_args, data_args, training_args):
 
     if training_args.do_predict:
         logger.info("*** Predict ***")
+        predict_split = data_args.predict_split
+        if predict_split == "train":
+            tokenized_data_to_predict = tokenized_train_data
+        else:
+            tokenized_data_to_predict = tokenized_datasets[predict_split]
         predict_and_save_output(
             trainer,
-            tokenized_eval_dataset=tokenized_datasets["test"],
+            tokenized_eval_dataset=tokenized_data_to_predict,
             label_list=label_list,
             labels_in_gaps=data_args.dataset_name != "bergamot",
-            output_eval_results_file=os.path.join(training_args.output_dir, f"test.{data_args.task_name}"),
-            output_eval_predictions_file=os.path.join(training_args.output_dir, f"test.{data_args.task_name}"),
+            output_eval_results_file=os.path.join(training_args.output_dir, f"{predict_split}.{data_args.task_name}"),
+            output_eval_predictions_file=os.path.join(
+                training_args.output_dir, f"{predict_split}.{data_args.task_name}"
+            ),
         )
 
     return
