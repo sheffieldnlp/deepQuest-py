@@ -24,6 +24,9 @@ class BiRNN(Model):
         seq2seq_encoder_tgt: Seq2SeqEncoder,
         attention: DotProductAttention,
         dropout: float = None,
+        kd_without_gold_data: bool = False,
+        kd_with_gold_data: bool = False,
+        alpha: float = None,
         label_namespace: str = "labels",
         **kwargs,
     ) -> None:
@@ -49,13 +52,17 @@ class BiRNN(Model):
         else:
             self._dropout = None
 
+        self.kd_without_gold_data = kd_without_gold_data
+        self.kd_with_gold_data = kd_with_gold_data
+        self.alpha = alpha
+
         self._label_namespace = label_namespace
         self._classifier_input_dim = src_out_dim + tgt_out_dim
         self._linear_layer = torch.nn.Linear(self._classifier_input_dim, 1)
         self._pearson = PearsonCorrelation()
         self._loss = torch.nn.MSELoss()
 
-    def forward(self, tokens_src: TextFieldTensors, tokens_tgt: TextFieldTensors, labels: torch.FloatTensor = None
+    def forward(self, tokens_src: TextFieldTensors, tokens_tgt: TextFieldTensors, labels: torch.FloatTensor = None, t_pred: torch.FloatTensor = None
     ) -> Dict[str, torch.Tensor]:
 
         embedded_text_src = self._text_field_embedder_src(tokens_src)
@@ -84,11 +91,69 @@ class BiRNN(Model):
         scores = torch.sigmoid(self._linear_layer(encoded_text).squeeze())
         output_dict = {"scores": scores}
 
+    
+        # The changes for adding knowledge distillation are included here.
         if labels is not None:
-            loss = self._loss(scores, labels.view(-1))
-            output_dict["loss"] = loss
-            self._pearson(scores, labels)
-        return output_dict
+
+            if self.kd_without_gold_data and self.kd_with_gold_data:
+                raise ValueError ("kd_without_gold_data and kd_with_gold_data options cannot be true simultaneously; Please set only one in the config file.")
+
+            if self.kd_with_gold_data and not self.kd_without_gold_data:
+                if self.alpha == 0:
+                    raise ValueError("When kd_with_gold_data flag is true, please specify a non-zero value for  alpha in config file")
+                else:
+                    print ("Calling Distillation With GOLD data")
+                    print ("\n T Pred Read Successfully:")
+                    print (t_pred)
+                    print ("type(t_pred) :", type(t_pred))
+                    print ("\n")
+                    print ("Calling distillation loss")
+
+                    print ("\n")
+                    print ("scores.shape :", scores.shape)
+                    print ("t_pred.shape :", t_pred.shape)
+                    
+                    distill_loss = self._loss(scores, t_pred.view(-1))
+                    output_dict["d_loss"] = distill_loss
+
+                    normal_loss = self._loss(scores, labels.view(-1))
+                    output_dict["normal_loss"] = normal_loss
+
+                    loss = self.alpha * distill_loss + (1.0 - self.alpha) * normal_loss
+                    output_dict["loss"] = loss
+
+                    print ()
+                    print ("alpha :", self.alpha)
+                    print ("distill_loss :", distill_loss)
+                    print ("normal_loss :", normal_loss)
+                    print ("total_loss :", loss)
+
+                    self._pearson(scores, labels)
+
+                    print ("output_dict: ", output_dict)
+            
+            elif self.kd_without_gold_data and not self.kd_with_gold_data:
+
+                print ("Calling Distillation WITHOUT GOLD data")
+
+                loss = self._loss(scores, t_pred.view(-1))
+
+                print ()
+                print ("LOSS: ", loss)
+                print ()
+
+                output_dict["loss"] = loss
+                self._pearson(scores, labels)
+
+            else:
+                print ("Calling normal loss; Without any Distillation")
+                loss = self._loss(scores, labels.view(-1))
+
+                print ("\n LOSS {} \n".format(loss))
+                output_dict["loss"] = loss
+                self._pearson(scores, labels)
+
+            return output_dict        
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
         metrics = {"pearson": self._pearson.get_metric(reset)}
