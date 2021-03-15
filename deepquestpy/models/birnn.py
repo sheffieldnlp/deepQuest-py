@@ -103,13 +103,11 @@ class BiRNN(Model):
                     raise ValueError("When kd_with_gold_data flag is true, please specify a non-zero value for  alpha in config file")
                 else:
                     print ("Calling Distillation With GOLD data")
-                    print ("\n T Pred Read Successfully:")
+                    print ("\n T Pred Read Successfully !!:")
                     print (t_pred)
                     print ("type(t_pred) :", type(t_pred))
                     print ("\n")
-                    print ("Calling distillation loss")
 
-                    print ("\n")
                     print ("scores.shape :", scores.shape)
                     print ("t_pred.shape :", t_pred.shape)
                     
@@ -146,7 +144,7 @@ class BiRNN(Model):
                 self._pearson(scores, labels)
 
             else:
-                print ("Calling normal loss; Without any Distillation")
+                print ("Calling Normal Loss; Without Any Distillation")
                 loss = self._loss(scores, labels.view(-1))
 
                 print ("\n LOSS {} \n".format(loss))
