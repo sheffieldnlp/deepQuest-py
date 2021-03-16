@@ -14,7 +14,7 @@ from transformers.models.roberta.modeling_roberta import (
 from transformers.modeling_outputs import TokenClassifierOutput
 
 
-class RobertaForJointQualityEstimation(RobertaPreTrainedModel):
+class RobertaForWordQualityEstimation(RobertaPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         self.num_word_labels = config.num_labels  # word-level tags
@@ -106,5 +106,5 @@ class RobertaForJointQualityEstimation(RobertaPreTrainedModel):
         )
 
 
-class XLMRobertaForJointQualityEstimation(RobertaForJointQualityEstimation):
+class XLMRobertaForWordQualityEstimation(RobertaForWordQualityEstimation):
     config_class = XLMRobertaConfig
