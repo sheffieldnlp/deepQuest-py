@@ -12,8 +12,8 @@ class DataTrainingArguments:
         default=None,
         metadata={"help": "The name of the dataset to use (via the datasets library or from deepquest-py)."},
     )
-    src_lang: str = field(default=None, metadata={"help": "Two letter identifier of the source language."})
-    tgt_lang: str = field(default=None, metadata={"help": "Two letter identifier of the target language."})
+    src_lang: str = field(default="src", metadata={"help": "Two letter identifier of the source language."})
+    tgt_lang: str = field(default="tgt", metadata={"help": "Two letter identifier of the target language."})
     train_file: Optional[str] = field(
         default=None, metadata={"help": "An optional input training data file (a csv file)."}
     )

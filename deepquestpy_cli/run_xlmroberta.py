@@ -149,8 +149,9 @@ def main(model_args, data_args, training_args):
             data_files["validation"] = data_args.validation_file
         if data_args.test_file is not None:
             data_files["test"] = data_args.test_file
-        extension = data_args.train_file.split(".")[-1]
-        datasets = load_dataset(extension, data_files=data_files)
+        datasets = load_dataset(
+            f"{DATASETS_LOADERS_DIR}/customqe.py", data_files=data_files, download_mode="force_redownload"
+        )
 
     if model_args.model_type == "sentence":
         num_labels = 1  # regression
