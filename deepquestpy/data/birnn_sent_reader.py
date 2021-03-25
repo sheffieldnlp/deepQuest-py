@@ -37,7 +37,7 @@ class BiRNNSentReader(DatasetReader):
     def _read(self, path_name: str):
         src_filename = os.path.join(self.data_path,path_name,path_name+".src")
         tgt_filename = os.path.join(self.data_path,path_name,path_name+".mt")
-        hter_filename = os.path.join(self.data_path,path_name,path_name+".hter")
+        score_filename = os.path.join(self.data_path,path_name,path_name+".score")
         t_pred_filename = os.path.join(self.data_path,path_name,path_name+".tpred")
 
         print ("++++++++++")
@@ -45,12 +45,12 @@ class BiRNNSentReader(DatasetReader):
         print ("++++++++++")
 
         with open(src_filename, "r") as src_file, open(tgt_filename, "r") as tgt_file,\
-                open(hter_filename, "r") as hter_file, open(t_pred_filename, "r") as t_pred_file:
+                open(score_filename, "r") as score_file, open(t_pred_filename, "r") as t_pred_file:
 
-            for src, tgt, hter, t_pred in zip(self.shard_iterable(src_file),
-                self.shard_iterable(tgt_file), self.shard_iterable(hter_file), self.shard_iterable(t_pred_file)):
+            for src, tgt, score, t_pred in zip(self.shard_iterable(src_file),
+                self.shard_iterable(tgt_file), self.shard_iterable(score_file), self.shard_iterable(t_pred_file)):
                 
-                yield self.text_to_instance(src, tgt, np.asarray(hter, dtype=np.float32), np.asarray(t_pred, dtype=np.float32))
+                yield self.text_to_instance(src, tgt, np.asarray(score, dtype=np.float32), np.asarray(t_pred, dtype=np.float32))
 
     @overrides
     def text_to_instance(

@@ -89,11 +89,24 @@ class BiRNN(Model):
 
         encoded_text = torch.cat([encoded_text_src,encoded_text_tgt],dim=-1)
         scores = torch.sigmoid(self._linear_layer(encoded_text).squeeze())
+        
+        print ()
+        print ("scores")
+        print ("type :", type(scores))
+        print ("Shape :", scores.shape)
+        print ("scores", scores)
+        print ()
+
         output_dict = {"scores": scores}
 
-    
         # The changes for adding knowledge distillation are included here.
         if labels is not None:
+
+            print ("labels")
+            print ("type: ", type(labels))
+            print ("Shape: ", labels.shape)
+            print ("labels :", labels)
+            print ()
 
             if self.kd_without_gold_data and self.kd_with_gold_data:
                 raise ValueError ("kd_without_gold_data and kd_with_gold_data options cannot be true simultaneously; Please set only one in the config file.")
