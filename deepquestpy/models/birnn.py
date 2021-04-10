@@ -124,10 +124,10 @@ class BiRNN(Model):
                     print ("scores.shape :", scores.shape)
                     print ("t_pred.shape :", t_pred.shape)
                     
-                    distill_loss = self._loss(scores, t_pred.view(-1))
+                    distill_loss = self._loss(scores, t_pred.long().view(-1))
                     output_dict["d_loss"] = distill_loss
 
-                    normal_loss = self._loss(scores, labels.view(-1))
+                    normal_loss = self._loss(scores, labels.long().view(-1))
                     output_dict["normal_loss"] = normal_loss
 
                     loss = self.alpha * distill_loss + (1.0 - self.alpha) * normal_loss
@@ -147,7 +147,7 @@ class BiRNN(Model):
 
                 print ("Calling Distillation WITHOUT GOLD data")
 
-                loss = self._loss(scores, t_pred.view(-1))
+                loss = self._loss(scores, t_pred.long().view(-1))
 
                 print ()
                 print ("LOSS: ", loss)

@@ -57,8 +57,8 @@
     },
     "dropout": 0.5,
     "kd_without_gold_data": false,
-    "kd_with_gold_data": false,
-    "alpha": 0.0
+    "kd_with_gold_data": true,
+    "alpha": 0.7
   },
   "data_loader": {
     "batch_sampler": {
