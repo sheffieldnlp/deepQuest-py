@@ -57,8 +57,8 @@
     },
     "dropout": 0.5,
     "kd_without_gold_data": false,
-    "kd_with_gold_data": true,
-    "alpha": 0.7
+    "kd_with_gold_data": false,
+    "alpha": 0.0
   },
   "data_loader": {
     "batch_sampler": {
@@ -69,7 +69,7 @@
   "trainer": {
     "num_epochs": 3,
     "patience": 15,
-    "validation_metric": "+pearson",
+    "validation_metric": "+accuracy",
     "optimizer": {
       "type": "adagrad",
       "lr": 0.001

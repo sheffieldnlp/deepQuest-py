@@ -6,7 +6,7 @@ from allennlp.models.model import Model
 from allennlp.modules import Seq2SeqEncoder, TextFieldEmbedder
 from allennlp.modules.attention import DotProductAttention
 from allennlp.nn.util import get_text_field_mask, weighted_sum
-from allennlp.training.metrics import PearsonCorrelation
+from allennlp.training.metrics import CategoricalAccuracy
 
 @Model.register("birnn")
 class BiRNN(Model):
@@ -58,9 +58,9 @@ class BiRNN(Model):
 
         self._label_namespace = label_namespace
         self._classifier_input_dim = src_out_dim + tgt_out_dim
-        self._linear_layer = torch.nn.Linear(self._classifier_input_dim, 1)
-        self._pearson = PearsonCorrelation()
-        self._loss = torch.nn.MSELoss()
+        self._linear_layer = torch.nn.Linear(self._classifier_input_dim, 2)
+        self._accuracy = CategoricalAccuracy()
+        self._loss = torch.nn.CrossEntropyLoss()
 
     def forward(self, tokens_src: TextFieldTensors, tokens_tgt: TextFieldTensors, labels: torch.FloatTensor = None, t_pred: torch.FloatTensor = None
     ) -> Dict[str, torch.Tensor]:
@@ -139,7 +139,7 @@ class BiRNN(Model):
                     print ("normal_loss :", normal_loss)
                     print ("total_loss :", loss)
 
-                    self._pearson(scores, labels)
+                    self._accuracy(scores, labels)
 
                     print ("output_dict: ", output_dict)
             
@@ -154,18 +154,18 @@ class BiRNN(Model):
                 print ()
 
                 output_dict["loss"] = loss
-                self._pearson(scores, labels)
+                self._accuracy(scores, labels)
 
             else:
                 print ("Calling Normal Loss; Without Any Distillation")
-                loss = self._loss(scores, labels.view(-1))
+                loss = self._loss(scores, labels.long().view(-1))
 
                 print ("\n LOSS {} \n".format(loss))
                 output_dict["loss"] = loss
-                self._pearson(scores, labels)
+                self._accuracy(scores, labels)
 
             return output_dict        
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
-        metrics = {"pearson": self._pearson.get_metric(reset)}
+        metrics = {"accuracy": self._accuracy.get_metric(reset)}
         return metrics
