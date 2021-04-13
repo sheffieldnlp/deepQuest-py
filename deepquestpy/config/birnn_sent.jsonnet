@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "type": "birnn_sent_reader",
-    "data_path": "/Users/hppx88/MT-QualityEstimation/code/deepQuest-py/datasets/sampleDataBiRNN",
+    "data_path": "/experiments/agajbhiye/deepQuestPY/deepQuest-py/datasets/small_et_en_mlqe",
     "token_indexers_src": {
       "tokens": {
         "type": "single_id",
@@ -58,16 +58,16 @@
     "dropout": 0.5,
     "kd_without_gold_data": false,
     "kd_with_gold_data": true,
-    "alpha": 0.7
+    "alpha": 0.9
   },
   "data_loader": {
     "batch_sampler": {
       "type": "bucket",
-      "batch_size": 4
+      "batch_size": 32
     }
   },
   "trainer": {
-    "num_epochs": 3,
+    "num_epochs": 50,
     "patience": 15,
     "validation_metric": "+accuracy",
     "optimizer": {

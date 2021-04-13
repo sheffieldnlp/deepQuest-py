@@ -135,6 +135,7 @@ dmypy.json
 .idea
 
 #Sample Data Folder
+datasets/
 .score
 .tpred
 .src

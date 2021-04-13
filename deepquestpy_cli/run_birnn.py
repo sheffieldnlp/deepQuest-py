@@ -49,7 +49,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # training arguments
     parser.add_argument("--do_train", action="store_true")
-    parser.add_argument("--config_file", type=str, default="deepquestpy/config/birnn_word.jsonnet", help="Experiment config file.")
+    parser.add_argument("--config_file", type=str, default="/experiments/agajbhiye/deepQuestPY/deepQuest-py/deepquestpy/config/birnn_sent.jsonnet", help="Experiment config file.")
     parser.add_argument("--output_dir", type=str,default="data/output/model", help="Directory to save trained models.")
     parser.add_argument("--overwrite_output_dir", action="store_true")
 

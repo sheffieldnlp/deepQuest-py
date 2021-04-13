@@ -94,7 +94,7 @@ class BiRNN(Model):
         print ("scores")
         print ("type :", type(scores))
         print ("Shape :", scores.shape)
-        print ("scores", scores)
+        #print ("scores", scores)
         print ()
 
         output_dict = {"scores": scores}
@@ -141,7 +141,7 @@ class BiRNN(Model):
 
                     self._accuracy(scores, labels)
 
-                    print ("output_dict: ", output_dict)
+                    #print ("output_dict: ", output_dict)
             
             elif self.kd_without_gold_data and not self.kd_with_gold_data:
 
