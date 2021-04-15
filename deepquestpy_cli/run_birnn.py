@@ -1,5 +1,7 @@
 import argparse
 import os
+import json
+import numpy as np
 from allennlp.common.util import import_module_and_submodules
 import_module_and_submodules('deepquestpy')
 
@@ -23,13 +25,30 @@ def main(args):
         batch_size = archive.config["data_loader"]["batch_sampler"]["batch_size"]
         eval_loader = SimpleDataLoader(eval_instances, batch_size=batch_size)
         eval_loader.index_with(model.vocab)
-        metrics = evaluate(model,eval_loader)
+        metrics = evaluate(model,eval_loader, predictions_output_file=args.pred_output_file)
         if (args.eval_output_file):
             with open(args.eval_output_file,mode="w", encoding="utf-8") as eval_results_fh:
                 print(metrics,file=eval_results_fh)
                 print("Evaluation results written to ", args.eval_output_file)
         else:
             print(metrics)
+        
+        if (args.pred_output_file):
+            list_of_score_dicts = []
+
+            with open (args.pred_output_file, "r") as pred_file:
+                for line in pred_file:
+                    list_of_score_dicts.append(json.loads(line))
+        
+            predicted = [np.array(x["scores"]).argmax(axis=1) for x in list_of_score_dicts]
+            flat_list = [item for sublist in predicted for item in sublist]
+
+            with open (args.pred_output_file, "w") as pred_file:
+                for pred in flat_list:
+                    pred_file.write("%d\n"%pred)
+                
+                print ("Predictions are written to :", args.pred_output_file)
+            
     return
 
 def cli_main(args):
@@ -58,5 +77,9 @@ if __name__ == "__main__":
     parser.add_argument("--eval_model", type=str,default="data/output/model/model.tar.gz", help="Model to evaluate.")
     parser.add_argument("--eval_output_file", type=str,default="data/output/eval_results.json", help="Output file to which evaluation results will be written.")
     parser.add_argument("--eval_data_path", type=str,default="test", help="Path containing evaluation data (relative to data_path as set in the config_file")
+
+    parser.add_argument("--pred_output_file", type=str, default="data/output/predictions.txt", help="Path containing the predictions (output_dict) from the model evaluation")
+
+
     args = parser.parse_args()
     cli_main(args)
