@@ -57,17 +57,17 @@
     },
     "dropout": 0.5,
     "kd_without_gold_data": false,
-    "kd_with_gold_data": false,
-    "alpha": 0.0
+    "kd_with_gold_data": true,
+    "alpha": 0.7
   },
   "data_loader": {
     "batch_sampler": {
       "type": "bucket",
-      "batch_size": 32
+      "batch_size": 2
     }
   },
   "trainer": {
-    "num_epochs": 50,
+    "num_epochs": 1,
     "patience": 15,
     "validation_metric": "+accuracy",
     "optimizer": {

@@ -140,3 +140,5 @@ datasets/
 .tpred
 .src
 .mt
+.DS_Store
+out.txt

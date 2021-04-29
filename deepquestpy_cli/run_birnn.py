@@ -78,8 +78,7 @@ if __name__ == "__main__":
     parser.add_argument("--eval_output_file", type=str,default="data/output/eval_results.json", help="Output file to which evaluation results will be written.")
     parser.add_argument("--eval_data_path", type=str,default="test", help="Path containing evaluation data (relative to data_path as set in the config_file")
 
-    parser.add_argument("--pred_output_file", type=str, default="data/output/predictions.txt", help="Path containing the predictions (output_dict) from the model evaluation")
-
+    parser.add_argument("--pred_output_file", type=str, default="data/output/predictions.txt", help="Path containing the predictions from the model evaluation")
 
     args = parser.parse_args()
     cli_main(args)

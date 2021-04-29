@@ -8,6 +8,7 @@ from allennlp.modules.attention import DotProductAttention
 from allennlp.nn.util import get_text_field_mask, weighted_sum
 from allennlp.training.metrics import CategoricalAccuracy
 
+
 @Model.register("birnn")
 class BiRNN(Model):
     """
@@ -59,10 +60,10 @@ class BiRNN(Model):
         self._label_namespace = label_namespace
         self._classifier_input_dim = src_out_dim + tgt_out_dim
         self._linear_layer = torch.nn.Linear(self._classifier_input_dim, 2)
-        self._accuracy = CategoricalAccuracy()
-        self._loss = torch.nn.CrossEntropyLoss()
+        self._accuracy = CategoricalAccuracy()        
+        self._loss = torch.nn.BCEWithLogitsLoss()
 
-    def forward(self, tokens_src: TextFieldTensors, tokens_tgt: TextFieldTensors, labels: torch.FloatTensor = None, t_pred: torch.FloatTensor = None
+    def forward(self, tokens_src: TextFieldTensors, tokens_tgt: TextFieldTensors, labels: torch.FloatTensor = None, t_logits: torch.FloatTensor = None
     ) -> Dict[str, torch.Tensor]:
 
         embedded_text_src = self._text_field_embedder_src(tokens_src)
@@ -81,20 +82,27 @@ class BiRNN(Model):
         encoded_text_src = self._linear_layer_src(encoded_text_src)
         encoded_text_tgt = self._linear_layer_tgt(encoded_text_tgt)
 
-        attention_dist_src = self.attention(self.context_weights_src.expand(encoded_text_src.size()[0],-1),encoded_text_src)
+        attention_dist_src = self.attention(self.context_weights_src.expand(encoded_text_src.size()[0],-1), encoded_text_src)
         encoded_text_src = weighted_sum(encoded_text_src, attention_dist_src)
 
-        attention_dist_tgt = self.attention(self.context_weights_tgt.expand(encoded_text_tgt.size()[0], -1),encoded_text_tgt)
+        attention_dist_tgt = self.attention(self.context_weights_tgt.expand(encoded_text_tgt.size()[0], -1), encoded_text_tgt)
         encoded_text_tgt = weighted_sum(encoded_text_tgt, attention_dist_tgt)
 
         encoded_text = torch.cat([encoded_text_src,encoded_text_tgt],dim=-1)
-        scores = torch.sigmoid(self._linear_layer(encoded_text).squeeze())
+        scores = self._linear_layer(encoded_text)
         
         print ()
         print ("scores")
         print ("type :", type(scores))
         print ("Shape :", scores.shape)
-        #print ("scores", scores)
+        print ("scores", scores)
+        print ()
+
+        print ()
+        print ("t_logits")
+        print ("type :", type(t_logits))
+        print ("Shape :", t_logits.shape)
+        print ("t_logits", t_logits)
         print ()
 
         output_dict = {"scores": scores}
@@ -116,18 +124,19 @@ class BiRNN(Model):
                     raise ValueError("When kd_with_gold_data flag is true, please specify a non-zero value for  alpha in config file")
                 else:
                     print ("Calling Distillation With GOLD data")
-                    print ("\n T Pred Read Successfully !!:")
-                    print (t_pred)
-                    print ("type(t_pred) :", type(t_pred))
+                    print ("\n T logits Read Successfully !!:")
+                    print ("type(t_logits) :", type(t_logits))
+                    print (t_logits)
                     print ("\n")
 
                     print ("scores.shape :", scores.shape)
-                    print ("t_pred.shape :", t_pred.shape)
-                    
-                    distill_loss = self._loss(scores, t_pred.long().view(-1))
+                    print ("t_logits.shape :", t_logits.shape)
+                    print ("labels.shape :", labels.shape)
+                    #####
+                    distill_loss = self._loss(scores, t_logits)
                     output_dict["d_loss"] = distill_loss
 
-                    normal_loss = self._loss(scores, labels.long().view(-1))
+                    normal_loss = self._loss(scores, labels)
                     output_dict["normal_loss"] = normal_loss
 
                     loss = self.alpha * distill_loss + (1.0 - self.alpha) * normal_loss
@@ -139,7 +148,7 @@ class BiRNN(Model):
                     print ("normal_loss :", normal_loss)
                     print ("total_loss :", loss)
 
-                    self._accuracy(scores, labels)
+                    self._accuracy(scores, torch.argmax(labels, dim=1))
 
                     #print ("output_dict: ", output_dict)
             
@@ -147,22 +156,25 @@ class BiRNN(Model):
 
                 print ("Calling Distillation WITHOUT GOLD data")
 
-                loss = self._loss(scores, t_pred.long().view(-1))
+                loss = self._loss(scores, t_logits)
 
                 print ()
                 print ("LOSS: ", loss)
                 print ()
 
                 output_dict["loss"] = loss
-                self._accuracy(scores, labels)
+                self._accuracy(scores, torch.argmax(labels, dim=1))
 
             else:
                 print ("Calling Normal Loss; Without Any Distillation")
-                loss = self._loss(scores, labels.long().view(-1))
+                print ("scores.shape :", scores.shape)
+                print ("labels.shape :", torch.argmax(labels, dim=1).shape)
+
+                loss = self._loss(scores, labels)
 
                 print ("\n LOSS {} \n".format(loss))
                 output_dict["loss"] = loss
-                self._accuracy(scores, labels)
+                self._accuracy(scores, torch.argmax(labels, dim=1))
 
             return output_dict        
 
