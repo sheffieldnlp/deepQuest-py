@@ -4,7 +4,7 @@ set -e
 deepquestpy_dir="."
 eval_model="./data/output/model/model.tar.gz"
 eval_data_path="test"
-config_file="/Users/hppx88/MT-QualityEstimation/code/deepQuest-py/deepquestpy/config/birnn_sent.jsonnet"
+config_file="/experiments/agajbhiye/deepQuestPY/deepQuest-py/deepquestpy/config/birnn_sent.jsonnet"
 
 python "${deepquestpy_dir}/deepquestpy_cli/run_birnn.py" \
     --do_eval \

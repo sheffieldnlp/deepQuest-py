@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "type": "birnn_sent_reader",
-    "data_path": "/Users/hppx88/MT-QualityEstimation/code/deepQuest-py/datasets/sampleDataBiRNN",
+    "data_path": "/experiments/agajbhiye/deepQuestPY/deepQuest-py/datasets/small_et_en_mlqe",
     "token_indexers_src": {
       "tokens": {
         "type": "single_id",
@@ -57,8 +57,8 @@
     },
     "dropout": 0.5,
     "kd_without_gold_data": false,
-    "kd_with_gold_data": false,
-    "alpha": 0.0
+    "kd_with_gold_data": true,
+    "alpha": 0.3
   },
   "data_loader": {
     "batch_sampler": {
