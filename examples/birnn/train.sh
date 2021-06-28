@@ -2,7 +2,7 @@
 set -e
 
 deepquestpy_dir="."
-config_file="/Users/hppx88/MT-QualityEstimation/code/deepQuest-py/deepquestpy/config/birnn_sent.jsonnet"
+config_file="deepquestpy/config/birnn_sent.jsonnet"
 #config_file="deepquestpy/config/birnn_word.jsonnet" # use for word level experiments
 output_dir="data/output/model"
 
