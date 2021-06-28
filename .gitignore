@@ -145,4 +145,6 @@ dmypy.json
 
 # data
 /data
-/datasets
+/datasets/et_en_mlqe
+/datasets/small_et_en_mlqe
+/datasets/z_mean_balanced_et_en_data
