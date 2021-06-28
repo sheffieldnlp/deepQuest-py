@@ -128,15 +128,20 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# data
-/data
+.lock
+*.pyc
+
+### VisualStudioCode ###
+.vscode/*
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+**/.history
+
+# End of https://www.gitignore.io/api/visualstudiocode
 
 # IDE files
 .idea
 
-#Sample Data Folder
-/datasets
-.score
-.tpred
-.src
-.mt
+# data
+/data
