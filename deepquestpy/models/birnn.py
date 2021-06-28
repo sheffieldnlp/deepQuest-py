@@ -90,23 +90,10 @@ class BiRNN(Model):
         encoded_text = torch.cat([encoded_text_src,encoded_text_tgt],dim=-1)
         scores = torch.sigmoid(self._linear_layer(encoded_text).squeeze())
         
-        print ()
-        print ("scores")
-        print ("type :", type(scores))
-        print ("Shape :", scores.shape)
-        print ("scores", scores)
-        print ()
-
         output_dict = {"scores": scores}
 
         # The changes for adding knowledge distillation are included here.
         if labels is not None:
-
-            print ("labels")
-            print ("type: ", type(labels))
-            print ("Shape: ", labels.shape)
-            print ("labels :", labels)
-            print ()
 
             if self.kd_without_gold_data and self.kd_with_gold_data:
                 raise ValueError ("kd_without_gold_data and kd_with_gold_data options cannot be true simultaneously; Please set only one in the config file.")
@@ -116,14 +103,7 @@ class BiRNN(Model):
                     raise ValueError("When kd_with_gold_data flag is true, please specify a non-zero value for  alpha in config file")
                 else:
                     print ("Calling Distillation With GOLD data")
-                    print ("\n T Pred Read Successfully !!:")
-                    print (t_pred)
-                    print ("type(t_pred) :", type(t_pred))
-                    print ("\n")
 
-                    print ("scores.shape :", scores.shape)
-                    print ("t_pred.shape :", t_pred.shape)
-                    
                     distill_loss = self._loss(scores, t_pred.view(-1))
                     output_dict["d_loss"] = distill_loss
 
@@ -133,25 +113,13 @@ class BiRNN(Model):
                     loss = self.alpha * distill_loss + (1.0 - self.alpha) * normal_loss
                     output_dict["loss"] = loss
 
-                    print ()
-                    print ("alpha :", self.alpha)
-                    print ("distill_loss :", distill_loss)
-                    print ("normal_loss :", normal_loss)
-                    print ("total_loss :", loss)
-
                     self._pearson(scores, labels)
 
-                    print ("output_dict: ", output_dict)
-            
             elif self.kd_without_gold_data and not self.kd_with_gold_data:
 
                 print ("Calling Distillation WITHOUT GOLD data")
 
                 loss = self._loss(scores, t_pred.view(-1))
-
-                print ()
-                print ("LOSS: ", loss)
-                print ()
 
                 output_dict["loss"] = loss
                 self._pearson(scores, labels)
@@ -160,7 +128,6 @@ class BiRNN(Model):
                 print ("Calling Normal Loss; Without Any Distillation")
                 loss = self._loss(scores, labels.view(-1))
 
-                print ("\n LOSS {} \n".format(loss))
                 output_dict["loss"] = loss
                 self._pearson(scores, labels)
 

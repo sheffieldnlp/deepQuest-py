@@ -40,10 +40,6 @@ class BiRNNSentReader(DatasetReader):
         score_filename = os.path.join(self.data_path,path_name,path_name+".score")
         t_pred_filename = os.path.join(self.data_path,path_name,path_name+".tpred")
 
-        print ("++++++++++")
-        print ("In BiRNN Sent Reader")
-        print ("++++++++++")
-
         with open(src_filename, "r") as src_file, open(tgt_filename, "r") as tgt_file,\
                 open(score_filename, "r") as score_file, open(t_pred_filename, "r") as t_pred_file:
 
