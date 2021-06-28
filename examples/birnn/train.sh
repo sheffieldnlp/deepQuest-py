@@ -2,7 +2,9 @@
 set -e
 
 deepquestpy_dir="."
-config_file="deepquestpy/config/birnn.jsonnet"
+config_file="deepquestpy/config/birnn_sent.jsonnet" # Use for sentence level experiments
+#config_file="deepquestpy/config/birnn.jsonnet"
+
 #config_file="deepquestpy/config/birnn_word.jsonnet" # use for word level experiments
 output_dir="data/output/model"
 
