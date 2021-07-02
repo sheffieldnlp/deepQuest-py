@@ -43,6 +43,8 @@ pip install --editable ./
 	- [En-Zh](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/en_zh_100k_wiki.tar.gz)
 
 ### Trained Student Models
+The following are the links to the trained BiRNN student models on the MLQE and Wikipedia datasets. 
+
 - MLQE
 	- [Et-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/birnn_mlqe_et_en.tar.gz)
 	- [Ro-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/birnn_mlqe_ro_en.tar.gz)
