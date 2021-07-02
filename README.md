@@ -23,7 +23,7 @@ pip install --editable ./
 
 ### Teacher Model, MonoTransQuest - Training and Evaluation
 - Knowledge distillation framework in the `deepQuest-py` can utilise predictions from any teacher model.
-- We used the predictions from the state-of-the-art [MonoTransQuest ](https://aclanthology.org/2020.coling-main.445/)  pretained models available [here](https://tharindu.co.uk/TransQuest/models/sentence_level_pretrained.html).
+- We used the predictions from the state-of-the-art [MonoTransQuest ](https://aclanthology.org/2020.coling-main.445/) pre-trained models available [here](https://tharindu.co.uk/TransQuest/models/sentence_level_pretrained.html). We include these predictions in the data provided for training the student model in the `Datasets` section.    
 - The MonoTransQuest model can also be trained from scratch as detailed [here](https://tharindu.co.uk/TransQuest/architectures/sentence_level_architectures.html).
 
 
@@ -35,14 +35,14 @@ pip install --editable ./
 - **Evaluate the model** by executing the evaluate script - `deepQuest-py/examples/birnn/evaluate.sh`
 
 ### Datasets
+Following are the links to download MLQE and Wikipedia datasets for training the student BiRNN model.
 - MLQE
-  - [Et-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/et_en_mlqe.tar.gz)
-   - [Ro-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/ro_en_mlqe.tar.gz)
-   - [Si-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/si_en_mlqe.tar.gz)
-   - [Ne-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/ne_en_mlqe.tar.gz)
-   - [En-Zh](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/en_zh_mlqe.tar.gz)
+	- [Et-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/et_en_mlqe.tar.gz)
+	- [Ro-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/ro_en_mlqe.tar.gz)
+	- [Si-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/si_en_mlqe.tar.gz)
+	- [Ne-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/ne_en_mlqe.tar.gz)
+	- [En-Zh](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/en_zh_mlqe.tar.gz)
 
-	
 - Wikipedia
 	- [Et-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/et_en_25k_wiki.tar.gz)
 	- [Ro-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/ro_en_100k_wiki.tar.gz)
@@ -51,6 +51,7 @@ pip install --editable ./
 	- [En-Zh](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/en_zh_100k_wiki.tar.gz)
 
 ### Trained Student Models
+Following are the trained BiRNN student models. The models are trained on MLQE and Wikipedia data.
 - MLQE
 	- [Et-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/birnn_mlqe_et_en.tar.gz)
 	- [Ro-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/birnn_mlqe_ro_en.tar.gz)
