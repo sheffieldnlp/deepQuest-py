@@ -30,7 +30,9 @@ pip install --editable ./
 ### Student Model, deepQuest-py BiRNN - Training and Evaluation
 
 - **Download the data** - MLQE or Wikipedia from the links provided below.
-- **Update the config file** - Set the flag `kd_without_gold_data` in the config file, `deepQuest-py/deepquestpy/config/birnn_sent.jsonnet` to `true`
+- **Update the config file**  - `deepQuest-py/deepquestpy/config/birnn_sent.jsonnet` as follows:
+	- Set the `data_path` parameter to the path to the downloaded dataset.
+	- Set the knowledge distillation flag - `kd_without_gold_data` to `true`.
 - **Train the model** - Execute the script `deepQuest-py/examples/birnn/train.sh` with the updated config file. 
 - **Evaluate the model** by executing the evaluate script - `deepQuest-py/examples/birnn/evaluate.sh`
 
