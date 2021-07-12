@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "type": "birnn_sent_reader",
-    "data_path": "/experiments/agajbhiye/deepQuest-py-ForPrediction/datasets/ro_en_mlqe",
+    "data_path": "datasets/ro_en_mlqe",
     "token_indexers_src": {
       "tokens": {
         "type": "single_id",
