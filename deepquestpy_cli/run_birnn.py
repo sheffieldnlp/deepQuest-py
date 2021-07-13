@@ -1,5 +1,6 @@
 import argparse
 import os
+import json
 from allennlp.common.util import import_module_and_submodules
 import_module_and_submodules('deepquestpy')
 
@@ -32,6 +33,19 @@ def main(args):
             print(metrics)
         
         if (args.pred_output_file):
+            list_of_score_dicts = []
+            
+            with open (args.pred_output_file, "r") as pred_file:
+                for line in pred_file:
+                    list_of_score_dicts.append(json.loads(line))
+            
+            predicted = [x["scores"] for x in list_of_score_dicts]
+            flat_list = [item for sublist in predicted for item in sublist]
+
+            with open (args.pred_output_file, "w") as pred_file:
+                for pred in flat_list:
+                    pred_file.write("{}\n".format(pred))
+
             print ("Predictions are written to :", args.pred_output_file)
     return
 
