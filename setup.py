@@ -20,6 +20,6 @@ setup(
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
     python_requires=">=3.6",
-    install_requires=["numpy", "tqdm", "transformers", "scipy", "scikit-learn", "pandas", "tokenizers", "datasets"],
+    install_requires=["allennlp==2.1.0","numpy", "tqdm", "transformers", "scipy", "scikit-learn", "pandas", "tokenizers", "datasets"],
     entry_points={"console_scripts": ["deepquestpy-run-model=deepquestpy_cli.run_model:main"]},
 )
