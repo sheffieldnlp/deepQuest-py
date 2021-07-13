@@ -23,13 +23,16 @@ def main(args):
         batch_size = archive.config["data_loader"]["batch_sampler"]["batch_size"]
         eval_loader = SimpleDataLoader(eval_instances, batch_size=batch_size)
         eval_loader.index_with(model.vocab)
-        metrics = evaluate(model,eval_loader)
+        metrics = evaluate(model,eval_loader, predictions_output_file=args.pred_output_file)
         if (args.eval_output_file):
             with open(args.eval_output_file,mode="w", encoding="utf-8") as eval_results_fh:
                 print(metrics,file=eval_results_fh)
                 print("Evaluation results written to ", args.eval_output_file)
         else:
             print(metrics)
+        
+        if (args.pred_output_file):
+            print ("Predictions are written to :", args.pred_output_file)
     return
 
 def cli_main(args):
@@ -57,6 +60,9 @@ if __name__ == "__main__":
     parser.add_argument("--do_eval", action="store_true")
     parser.add_argument("--eval_model", type=str,default="data/output/model/model.tar.gz", help="Model to evaluate.")
     parser.add_argument("--eval_output_file", type=str,default="data/output/eval_results.json", help="Output file to which evaluation results will be written.")
+
+    parser.add_argument("--pred_output_file", type=str,default="data/output/predictions.txt", help="Output file to which test predictions are written")
+
     parser.add_argument("--eval_data_path", type=str,default="test", help="Path containing evaluation data (relative to data_path as set in the config_file")
     args = parser.parse_args()
     cli_main(args)
