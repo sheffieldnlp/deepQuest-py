@@ -57,18 +57,11 @@ pip install --editable ./
 
 ### Trained Student Models
 - **Download the data**, as mentioned above by executing the script `data_download.sh`. To download a particular dataset, please use the links provided above in the `Datasets` section.  
-- **Download the trained student models** by executing the script - `model_download.sh`. This will create a directory called `trained_models` in the `deepQuest-py` directory and will download all the trained models in the directory. The links to download trained model for a particular language pair are provided below.
+- **Download the trained student models** by executing the script - `model_download.sh`. This will create a directory called `trained_models` in the `deepQuest-py` directory and will download all the trained models in the directory. The links to download the individual trained model for a particular language pair are also provided below.
 
-To evaluate a trained model on the test data for a particular language pair. Run the following command:
+To evaluate a trained model on the test data for a particular language pair:
+- Update the `eval_model` path in the evaluate script `examples/birnn/evaluate.sh` to the path to the trained model `tar.gz`file and execute the script. For example, to evalute on the MLQE `ro-en` downloaded trained model update as `eval_model=trained_models/birnn_mlqe_ro_en.tar.gz`  and execute the script.
 
-```python
-python deepquestpy_cli/run_birnn.py --do_eval --eval_model "path to the saved model tar.gz file" 
-```
-
-For example, to evalute MLQE student model trained on MLQE`ro-en` data run the following command:
-```python
-python deepquestpy_cli/run_birnn.py --do_eval --eval_model "trained_models/birnn_mlqe_ro_en.tar.gz" 
-```
 Links to trained BiRNN Student models:
 - MLQE
 	- [Et-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/birnn_mlqe_et_en.tar.gz)
