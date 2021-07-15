@@ -19,14 +19,15 @@ setup(
     packages=find_packages(),
     python_requires=">=3.6",
     install_requires=[
+        "allennlp==2.1.0",
         "numpy",
         "tqdm",
-        "transformers>=4.8",
+        "transformers",
         "scipy",
         "scikit-learn",
         "pandas",
         "tokenizers",
         "datasets",
     ],
-    entry_points={"console_scripts": ["dq-py=deepquestpy.__main__:main"]},
+    entry_points={"console_scripts": ["deepquestpy-run-model=deepquestpy_cli.run_model:main"]},
 )
