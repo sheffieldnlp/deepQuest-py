@@ -22,7 +22,7 @@ setup(
         "allennlp==2.1.0",
         "numpy",
         "tqdm",
-        "transformers",
+        "transformers>=4.8",
         "scipy",
         "scikit-learn",
         "pandas",
