@@ -17,6 +17,7 @@ def main(args):
                               force=args.overwrite_output_dir)
     # Evaluation
     if args.do_eval:
+        model_stat = os.stat(args.eval_model)
         archive = load_archive(args.eval_model)
         model = archive.model
         reader = archive.validation_dataset_reader if "validation_dataset_reader" in archive else archive.dataset_reader
@@ -41,10 +42,13 @@ def main(args):
             
             predicted = [x["scores"] for x in list_of_score_dicts]
             flat_list = [item for sublist in predicted for item in sublist]
-
+        
             with open (args.pred_output_file, "w") as pred_file:
-                for pred in flat_list:
-                    pred_file.write("{}\n".format(pred))
+                pred_file.write("{}\n".format(model_stat.st_size))
+                pred_file.write("{}\n".format("<NUMBER OF PARAMETERS>"))
+
+                for line_num, pred in enumerate(flat_list):
+                    pred_file.write("{}\t{}\t{}\t{}\n".format(args.lang_pair, "know_distill", str(line_num), round(pred, 6)))
 
             print ("Predictions are written to :", args.pred_output_file)
     return
@@ -72,6 +76,7 @@ if __name__ == "__main__":
 
     # evaluation arguments
     parser.add_argument("--do_eval", action="store_true")
+    parser.add_argument("--lang_pair", type=str, default=None, help="language pair on which the model is trained and evaluated on.")
     parser.add_argument("--eval_model", type=str,default="data/output/model/model.tar.gz", help="Model to evaluate.")
     parser.add_argument("--eval_output_file", type=str,default="data/output/eval_results.json", help="Output file to which evaluation results will be written.")
 
