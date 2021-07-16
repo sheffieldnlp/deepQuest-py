@@ -42,7 +42,7 @@ _LANGUAGE_PAIRS = [
     ("si", "en"),
 ]
 
-_MAIN_URL = "https://github.com/sheffieldnlp/mlqe-pe/tree/master/data/post-editing"
+_MAIN_URL = "https://github.com/sheffieldnlp/mlqe-pe/raw/master/data/post-editing"
 
 
 def inject_to_link(src_lg, tgt_lg):
@@ -105,7 +105,7 @@ class MlqePePostEditing(datasets.GeneratorBasedBuilder):
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,
                 gen_kwargs={
-                    "filepath": os.path.join(data_dir["train"], f"{self.config.src_lg}-{self.config.tgt_lg}", "train"),
+                    "filepath": os.path.join(data_dir["train"], f"{self.config.src_lg}-{self.config.tgt_lg}-train"),
                     "split": "train",
                     "source_lg": self.config.src_lg,
                     "target_lg": self.config.tgt_lg,
@@ -114,7 +114,7 @@ class MlqePePostEditing(datasets.GeneratorBasedBuilder):
             datasets.SplitGenerator(
                 name=datasets.Split.VALIDATION,
                 gen_kwargs={
-                    "filepath": os.path.join(data_dir["dev"], f"{self.config.src_lg}-{self.config.tgt_lg}", "dev"),
+                    "filepath": os.path.join(data_dir["dev"], f"{self.config.src_lg}-{self.config.tgt_lg}-dev"),
                     "split": "dev",
                     "source_lg": self.config.src_lg,
                     "target_lg": self.config.tgt_lg,
@@ -123,8 +123,8 @@ class MlqePePostEditing(datasets.GeneratorBasedBuilder):
             datasets.SplitGenerator(
                 name=datasets.Split.TEST,
                 gen_kwargs={
-                    "filepath": os.path.join(data_dir["test"], f"{self.config.src_lg}-{self.config.tgt_lg}", "test"),
-                    "split": "test",
+                    "filepath": os.path.join(data_dir["test"], f"{self.config.src_lg}-{self.config.tgt_lg}-test20"),
+                    "split": "test20",
                     "source_lg": self.config.src_lg,
                     "target_lg": self.config.tgt_lg,
                 },

@@ -69,6 +69,27 @@ class DataArguments:
     labels_in_gaps: bool = field(
         default=False, metadata={"help": "For word-level only. Whether to use labels for gaps in the target sentence."},
     )
+    max_train_samples: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": "For debugging purposes or quicker training, truncate the number of training examples to this "
+            "value if set."
+        },
+    )
+    max_eval_samples: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": "For debugging purposes or quicker training, truncate the number of evaluation examples to this "
+            "value if set."
+        },
+    )
+    max_predict_samples: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": "For debugging purposes or quicker training, truncate the number of prediction examples to this "
+            "value if set."
+        },
+    )
 
 
 @dataclass
