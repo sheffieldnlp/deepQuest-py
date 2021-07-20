@@ -67,7 +67,7 @@
     }
   },
   "trainer": {
-    "num_epochs": 50,
+    "num_epochs": 100,
     "patience": 15,
     "validation_metric": "+pearson",
     "optimizer": {
@@ -76,4 +76,3 @@
     }
   }
 }
-
