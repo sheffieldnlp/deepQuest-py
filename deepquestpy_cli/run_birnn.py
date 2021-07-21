@@ -8,6 +8,7 @@ from allennlp.commands.train import train_model_from_file
 from allennlp.training.util import evaluate
 from allennlp.models.archival import load_archive
 from allennlp.data.data_loaders import SimpleDataLoader
+from utils import disk_footprint
 
 def main(args):
     # Training
@@ -17,9 +18,9 @@ def main(args):
                               force=args.overwrite_output_dir)
     # Evaluation
     if args.do_eval:
-        model_stat = os.stat(args.eval_model)
         archive = load_archive(args.eval_model)
         model = archive.model
+        num_model_parameters = sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
         reader = archive.validation_dataset_reader if "validation_dataset_reader" in archive else archive.dataset_reader
         eval_instances = list(reader.read(args.eval_data_path))
         batch_size = archive.config["data_loader"]["batch_sampler"]["batch_size"]
@@ -44,8 +45,8 @@ def main(args):
             flat_list = [item for sublist in predicted for item in sublist]
         
             with open (args.pred_output_file, "w") as pred_file:
-                pred_file.write("{}\n".format(model_stat.st_size))
-                pred_file.write("{}\n".format("<NUMBER OF PARAMETERS>"))
+                pred_file.write("{}\n".format(disk_footprint(args.eval_model)))
+                pred_file.write("{}\n".format(num_model_parameters))
 
                 for line_num, pred in enumerate(flat_list):
                     pred_file.write("{}\t{}\t{}\t{}\n".format(args.lang_pair, "know_distill", str(line_num), round(pred, 6)))
