@@ -3,7 +3,7 @@
 - Uses the newest versions of the HuggingFace Transformers and Datasets libraries.
 - Inclues models for Word-Level Quality Estimation.
 
-## Instalation from Source
+## Installation from Source
 
 ```
 git clone https://github.com/sheffieldnlp/deepQuest-py.git
@@ -12,7 +12,7 @@ pip install --editable ./
 ```
 ### deepQuest-py BiRNN Model - Training and Evaluation (Gold Data)
 
-- **Download the data**, run the script `data_download.sh`. This will download the all MLQE and Wikipedia data in to the directory `datasets/`. To download a particular dataset, please use the links provided below in the `Datasets` section. 
+- **Download the data**, run the script `data_download.sh`. This will download the MLQE and Wikipedia data into the directory `datasets/`. To download a particular dataset, please use the links provided below in the `Datasets` section. 
 - **Update the config file**  - `deepquestpy/config/birnn_sent.jsonnet` as follows:
 	- Set the `data_path` parameter to the path of the language pair directory on which the model needs to be trained. For example, to train the model on the MLQE language pair, `ro-en`, set `data_path` to the previously downloaded`datasets/ro_en_mlqe` directory.
 	- Set the knowledge distillation flags - `kd_without_gold_data` and `kd_with_gold_data` to `false` and parameter `alpha` to `0.0`
@@ -30,7 +30,7 @@ pip install --editable ./
 
 ### Student Model, deepQuest-py BiRNN - Training and Evaluation
 
-- **Download the data**, run the script `data_download.sh`. This will download the all MLQE and Wikipedia data in to the directory `datasets/`. To download a particular dataset, please use the links provided below in the `Datasets` section. 
+- **Download the data**, run the script `data_download.sh`. This will download the MLQE and Wikipedia data into the directory `datasets/`. To download a particular dataset, please use the links provided below in the `Datasets` section. 
 - **Update the config file**  - `deepquestpy/config/birnn_sent.jsonnet` as follows:
 	- Set the `data_path` parameter to the path of the language pair directory on which the model needs to be trained. For example, to train the model on the MLQE language pair, `ro-en`, set `data_path` to the previously downloaded`datasets/ro_en_mlqe` directory.
 	- **Set the knowledge distillation flags** - `kd_without_gold_data` to `true` and `kd_with_gold_data` to `false` and parameter `alpha` to `0.0`
