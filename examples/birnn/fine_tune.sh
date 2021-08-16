@@ -1,4 +1,7 @@
 #!/bin/bash
+
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+
 set -e
 
 deepquestpy_dir="."
@@ -6,7 +9,7 @@ config_file="deepquestpy/config/birnn_sent_fine_tune.jsonnet" # Config file for 
 
 #config_file="deepquestpy/config/birnn_word.jsonnet" # use for word level experiments
 
-output_dir="data/output/fine_tunned_model"
+output_dir="data/mlqe_tpred_2nd_fine_tunned_1M_model"
 
 python "${deepquestpy_dir}/deepquestpy_cli/run_birnn.py" \
   --do_train \

@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "type": "birnn_sent_reader",
-    "data_path": "datasets/ro_en_temp_mlqe",
+    "data_path": "datasets/et_en_mlqe",
     "token_indexers_src": {
       "tokens": {
         "type": "single_id",
@@ -21,7 +21,7 @@
   "validation_data_path": "dev",
   "model": {
     "type": "from_archive",
-    "archive_file": "data/output/model/model.tar.gz"},
+    "archive_file": "data/et_en_wiki25k_fine_tuned_1M_model/model.tar.gz"},
   "data_loader": {
     "batch_sampler": {
       "type": "bucket",
@@ -34,7 +34,7 @@
     "validation_metric": "+pearson",
     "optimizer": {
       "type": "adagrad",
-      "lr": 0.001
+      "lr": 0.0001
     }
   }
 
