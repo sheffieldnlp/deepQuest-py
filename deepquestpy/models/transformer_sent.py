@@ -35,6 +35,9 @@ class TransformerDeepQuestModelSent(DeepQuestModelSent):
         self.data_args = data_args
         self.training_args = training_args
 
+    def set_evaluation_dataset_for_metrics(self, evaluation_dataset_for_metrics):
+        return None
+
     def tokenize_datasets(self, datasets):
         return datasets.map(
             self._preprocess_examples,
@@ -84,4 +87,6 @@ class TransformerDeepQuestModelSent(DeepQuestModelSent):
         return metrics
 
     def postprocess_predictions(self, predictions, *args):
-        return {"predictions": np.squeeze(predictions)}
+        predictions = np.squeeze(predictions)
+        predictions = np.atleast_1d(predictions)
+        return {"predictions": predictions}

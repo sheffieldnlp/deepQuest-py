@@ -62,8 +62,9 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
             # We use this argument because the texts in our dataset are lists of words (with a label for each word).
             is_split_into_words=True,
         )
-        tokenized_inputs["length_source"] = [len(label_src) for label_src in examples["src_tags"]]
-        if len(examples["mt_tags"][0]) > 0:  # to very that there are labels
+        tokenized_inputs["length_source"] = [len(e[src_lang].split()) for e in examples["translation"]]
+        ids_words = []
+        if len(examples["mt_tags"][0]) > 0:  # to verify that there are labels
             labels_word = []
             labels_sent = []
             for i, (hter, label_src, label_tgt) in enumerate(
@@ -95,11 +96,12 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
                     previous_word_idx = word_idx
                 labels_word.append(label_ids)
                 labels_sent.append(hter)
+                ids_words.append(word_ids)
+            tokenized_inputs["labels"] = labels_word
+            tokenized_inputs["score_sent"] = labels_sent
         else:
-            labels_word = [[]] * len(examples["mt_tags"])
-            labels_sent = examples["hter"]
-        tokenized_inputs["labels"] = labels_word
-        tokenized_inputs["score_sent"] = labels_sent
+            ids_words = [tokenized_inputs.word_ids(batch_index=i) for i in range(len(examples["translation"]))]
+        tokenized_inputs["ids_words"] = ids_words
         return tokenized_inputs
 
     def get_model(self):
@@ -142,10 +144,26 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
 
     def _get_true_predictions_for_source_and_target(self, tokenized_eval_dataset, raw_predictions, raw_labels):
         # Remove ignored index (special tokens)
-        true_predictions = [
-            [p for (p, l) in zip(prediction, label) if l != -100]
-            for prediction, label in zip(raw_predictions, raw_labels)
-        ]
+        if raw_labels is not None:
+            true_predictions = [
+                [p for (p, l) in zip(prediction, label) if l != -100]
+                for prediction, label in zip(raw_predictions, raw_labels)
+            ]
+        else:
+            true_predictions = []
+            for word_ids, pred_labels in zip(tokenized_eval_dataset["ids_words"], raw_predictions):
+                label_ids = []
+                previous_word_idx = None
+                for word_idx, pred_label_idx in zip(word_ids, pred_labels):
+                    if word_idx is None:
+                        continue
+                    elif word_idx != previous_word_idx:
+                        label_ids.append(pred_label_idx)
+                    elif self.data_args.label_all_tokens:
+                        label_ids.append(pred_label_idx)
+                    previous_word_idx = word_idx
+                true_predictions.append(label_ids)
+
         # Split in src and tgt
         preds_src, preds_tgt = [], []
         for preds, src_length in zip(true_predictions, tokenized_eval_dataset["length_source"]):
