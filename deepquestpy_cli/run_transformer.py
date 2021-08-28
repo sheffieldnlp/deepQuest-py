@@ -51,6 +51,12 @@ def main():
         raw_datasets = load_dataset(
             f"{DATASETS_LOADERS_DIR}/{data_args.dataset_name}", name=f"{data_args.src_lang}-{data_args.tgt_lang}",
         )
+    elif data_args.dataset_name in ["wmt20_mlqe_synth"]:
+        raw_datasets = load_dataset(
+            f"{DATASETS_LOADERS_DIR}/{data_args.dataset_name}",
+            name=f"{data_args.src_lang}-{data_args.tgt_lang}",
+            data_dir=data_args.data_dir,
+        )
     elif data_args.dataset_name is not None:
         raw_datasets = load_dataset(data_args.dataset_name, name=f"{data_args.src_lang}-{data_args.tgt_lang}")
     else:
