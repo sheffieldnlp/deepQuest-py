@@ -80,7 +80,7 @@ class RobertaForQualityEstimationWord(RobertaPreTrainedModel):
             loss_sentlevel = loss_fct_sent(logits_sentlevel.view(-1), score_sent.view(-1))
 
             # word-level
-            weights = [1.0, 3.0]  # additional weight for the BAD tags
+            weights = [3.0, 1.0]  # additional weight for the BAD tags ({0: 'BAD', 1: 'OK'})
             class_weights = torch.FloatTensor(weights).to(logits_wordlevel.device)
             loss_fct_word = CrossEntropyLoss(weight=class_weights)
             # Only keep active parts of the loss

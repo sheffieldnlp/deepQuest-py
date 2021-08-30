@@ -65,7 +65,8 @@ def compute_scores(references, predictions):
     flat_references = flatten(references)
     flat_predictions = flatten(predictions)
 
-    f1_good, f1_bad = f1_score(flat_references, flat_predictions, average=None, pos_label=None)
+    # {0: 'BAD', 1: 'OK'}
+    f1_bad, f1_good = f1_score(flat_references, flat_predictions, average=None, pos_label=None)
     mcc = matthews_corrcoef(flat_references, flat_predictions)
 
     scores = {"f1_good": f1_good, "f1_bad": f1_bad, "mcc": mcc}

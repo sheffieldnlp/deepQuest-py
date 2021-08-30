@@ -171,7 +171,7 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
             # For the target side we predict OK by default for the GAPS
             preds_tgt_no_gaps = preds[src_length:]
             if self.data_args.labels_in_gaps:
-                preds_tgt_with_gaps = [0] * (2 * len(preds_tgt_no_gaps) + 1)
+                preds_tgt_with_gaps = [self.label_to_id[self.label_list.index("OK")]] * (2 * len(preds_tgt_no_gaps) + 1)
                 for i, tag in enumerate(preds_tgt_no_gaps):
                     preds_tgt_with_gaps[2 * i + 1] = tag
                 preds_tgt.append(preds_tgt_with_gaps)
