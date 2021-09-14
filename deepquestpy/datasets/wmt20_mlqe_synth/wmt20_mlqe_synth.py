@@ -1,18 +1,4 @@
 # coding=utf-8
-# Copyright 2020 HuggingFace Datasets Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import os
 
 import logging
@@ -26,40 +12,46 @@ _CITATION = """
 _DESCRIPTION = """
 """
 
-
-class WMT2020QESynthConfig(datasets.BuilderConfig):
-    """BuilderConfig for WMT2020QE"""
-
-    def __init__(self, **kwargs):
-        """BuilderConfig for WMT2020 QE.
-
-        Args:
-          **kwargs: keyword arguments forwarded to super.
-        """
-        super(WMT2020QESynthConfig, self).__init__(**kwargs)
+_LANGUAGE_PAIRS = [
+    ("en", "de"),
+]
 
 
-class WMT2020QESynth(datasets.GeneratorBasedBuilder):
-    """ dataset."""
+class WMT20QESynthConfig(datasets.BuilderConfig):
+    def __init__(self, src_lg, tgt_lg, **kwargs):
+        super(WMT20QESynthConfig, self).__init__(**kwargs)
+        self.src_lg = src_lg
+        self.tgt_lg = tgt_lg
+
+
+class WMT20QESynth(datasets.GeneratorBasedBuilder):
 
     BUILDER_CONFIGS = [
-        WMT2020QESynthConfig(name="wmt2020qe_synth", version=datasets.Version("1.0.0"), description=""),
+        WMT20QESynthConfig(
+            name=f"{src_lg}-{tgt_lg}",
+            version=datasets.Version("0.0.1"),
+            description=f"WMT20QESynth: {src_lg} - {tgt_lg}",
+            src_lg=src_lg,
+            tgt_lg=tgt_lg,
+        )
+        for (src_lg, tgt_lg) in _LANGUAGE_PAIRS
     ]
+    BUILDER_CONFIG_CLASS = WMT20QESynthConfig
 
     def _info(self):
         return datasets.DatasetInfo(
             description=_DESCRIPTION,
             features=datasets.Features(
                 {
-                    "src": datasets.Sequence(datasets.Value("string")),
-                    "tgt": datasets.Sequence(datasets.Value("string")),
-                    "src_tags": datasets.Sequence(datasets.features.ClassLabel(names=["OK", "BAD"])),
-                    "tgt_tags": datasets.Sequence(datasets.features.ClassLabel(names=["OK", "BAD"])),
+                    "translation": datasets.Translation(languages=(self.config.src_lg, self.config.tgt_lg)),
+                    "src_tags": datasets.Sequence(datasets.ClassLabel(names=["BAD", "OK"])),
+                    "mt_tags": datasets.Sequence(datasets.ClassLabel(names=["BAD", "OK"])),
                     "hter": datasets.Value("float32"),
                 }
             ),
             supervised_keys=None,
             homepage="",
+            license="",
             citation=_CITATION,
         )
 
@@ -73,6 +65,8 @@ class WMT2020QESynth(datasets.GeneratorBasedBuilder):
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,
                 gen_kwargs={
+                    "source_lg": self.config.src_lg,
+                    "target_lg": self.config.tgt_lg,
                     "src_path": os.path.join(data_dir, "train", "train.src"),
                     "tgt_path": os.path.join(data_dir, "train", "train.mt"),
                     "src_tags_path": os.path.join(data_dir, "train", "train.source_tags"),
@@ -84,7 +78,7 @@ class WMT2020QESynth(datasets.GeneratorBasedBuilder):
 
         return generators
 
-    def _generate_examples(self, src_path, tgt_path, src_tags_path, tgt_tags_path, hter_path):
+    def _generate_examples(self, source_lg, target_lg, src_path, tgt_path, src_tags_path, tgt_tags_path, hter_path):
         logging.info("Generating examples")
         with open(src_path, encoding="utf-8") as src_file, open(tgt_path, encoding="utf-8") as mt_file, open(
             src_tags_path, encoding="utf-8"
@@ -95,9 +89,8 @@ class WMT2020QESynth(datasets.GeneratorBasedBuilder):
                 zip(src_file, mt_file, src_tags_file, mt_tags_file, hter_file)
             ):
                 yield id, {
-                    "src": src.strip().split(),
-                    "tgt": mt.strip().split(),
+                    "translation": {source_lg: src.strip(), target_lg: mt.strip()},
                     "src_tags": src_tags.strip().split(),
-                    "tgt_tags": mt_tags.strip().split(),
+                    "mt_tags": mt_tags.strip().split(),
                     "hter": float(hter.strip()),
                 }

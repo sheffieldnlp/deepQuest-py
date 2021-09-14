@@ -2,19 +2,19 @@ import torch
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss, MSELoss
 
-
 from transformers.models.xlm_roberta.configuration_xlm_roberta import XLMRobertaConfig
-
 from transformers.models.roberta.modeling_roberta import (
     RobertaPreTrainedModel,
     RobertaModel,
     RobertaClassificationHead,
 )
-
 from transformers.modeling_outputs import TokenClassifierOutput
 
+from deepquestpy.models.transformer_word import TransformerDeepQuestModelWord
+from deepquestpy.data.data_collator import DataCollatorForJointClassification
 
-class RobertaForWordQualityEstimation(RobertaPreTrainedModel):
+
+class RobertaForQualityEstimationWord(RobertaPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         self.num_word_labels = config.num_labels  # word-level tags
@@ -80,7 +80,7 @@ class RobertaForWordQualityEstimation(RobertaPreTrainedModel):
             loss_sentlevel = loss_fct_sent(logits_sentlevel.view(-1), score_sent.view(-1))
 
             # word-level
-            weights = [1.0, 3.0]  # additional weight for the BAD tags
+            weights = [3.0, 1.0]  # additional weight for the BAD tags ({0: 'BAD', 1: 'OK'})
             class_weights = torch.FloatTensor(weights).to(logits_wordlevel.device)
             loss_fct_word = CrossEntropyLoss(weight=class_weights)
             # Only keep active parts of the loss
@@ -106,5 +106,22 @@ class RobertaForWordQualityEstimation(RobertaPreTrainedModel):
         )
 
 
-class XLMRobertaForWordQualityEstimation(RobertaForWordQualityEstimation):
+class XLMRobertaForQualityEstimationWord(RobertaForQualityEstimationWord):
     config_class = XLMRobertaConfig
+
+
+class BeringLabWord(TransformerDeepQuestModelWord):
+    def load_pretrained_model(self):
+        return XLMRobertaForQualityEstimationWord.from_pretrained(
+            self.model_args.model_name_or_path,
+            from_tf=bool(".ckpt" in self.model_args.model_name_or_path),
+            config=self.config,
+            cache_dir=self.model_args.cache_dir,
+            revision=self.model_args.model_revision,
+        )
+
+    def get_data_collator(self):
+        return DataCollatorForJointClassification(
+            self.tokenizer, pad_to_multiple_of=8 if self.training_args.fp16 else None
+        )
+

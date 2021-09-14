@@ -65,7 +65,8 @@ def compute_scores(references, predictions):
     flat_references = flatten(references)
     flat_predictions = flatten(predictions)
 
-    f1_good, f1_bad = f1_score(flat_references, flat_predictions, average=None, pos_label=None)
+    # {0: 'BAD', 1: 'OK'}
+    f1_bad, f1_good = f1_score(flat_references, flat_predictions, average=None, pos_label=None)
     mcc = matthews_corrcoef(flat_references, flat_predictions)
 
     scores = {"f1_good": f1_good, "f1_bad": f1_bad, "mcc": mcc}
@@ -82,15 +83,40 @@ class QuEstEvalWord(datasets.Metric):
             inputs_description=_KWARGS_DESCRIPTION,
             features=datasets.Features(
                 {
-                    "references_src": datasets.Sequence(datasets.Value("int")),
-                    "predictions_src": datasets.Sequence(datasets.Value("int")),
-                    "references_tgt": datasets.Sequence(datasets.Value("int")),
-                    "predictions_tgt": datasets.Sequence(datasets.Value("int")),
+                    "references": {
+                        "src": datasets.Sequence(datasets.Value("int32")),
+                        "tgt": datasets.Sequence(datasets.Value("int32")),
+                    },
+                    "predictions": {
+                        "src": datasets.Sequence(datasets.Value("int32")),
+                        "tgt": datasets.Sequence(datasets.Value("int32")),
+                    },
                 }
             ),
         )
 
-    def _compute(self, references_src, predictions_src, references_tgt, predictions_tgt):
-        scores_src = compute_scores(references_src, predictions_src)
-        scores_tgt = compute_scores(references_tgt, predictions_tgt)
-        return {"src": scores_src, "tgt": scores_tgt}
+    def _compute(self, references, predictions):
+        scores = {}
+        if len(references[0]["tgt"]) > 0:
+            scores_tgt = compute_scores(
+                references=[ref["tgt"] for ref in references], predictions=[pred["tgt"] for pred in predictions]
+            )
+            scores.update(
+                {
+                    "tgt_f1_good": scores_tgt["f1_good"],
+                    "tgt_f1_bad": scores_tgt["f1_bad"],
+                    "tgt_mcc": scores_tgt["mcc"],
+                }
+            )
+        if len(references[0]["src"]) > 0:
+            scores_src = compute_scores(
+                references=[ref["src"] for ref in references], predictions=[pred["src"] for pred in predictions]
+            )
+            scores.update(
+                {
+                    "src_f1_good": scores_src["f1_good"],
+                    "src_f1_bad": scores_src["f1_bad"],
+                    "src_mcc": scores_src["mcc"],
+                }
+            )
+        return scores

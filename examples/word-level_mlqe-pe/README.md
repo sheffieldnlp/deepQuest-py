@@ -1,5 +1,11 @@
 # Word-Level Quality Estimation
 
+## MLQE-PE
+
+1. Run `simple_train.sh` to train a basic model.
+2. Run `simple_predict.sh` to generate predictions.
+
+## WMT20QE-Task2
 Steps to reproduce the results from [Lee (2020)](https://www.aclweb.org/anthology/2020.wmt-1.118/) in the WMT20 Shared Task on Quality Estimation - Task 2.
 
 1. Run `pretrain.sh` to train a model using synthetic data.
