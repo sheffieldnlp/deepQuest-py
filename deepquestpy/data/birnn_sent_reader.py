@@ -7,8 +7,7 @@ from allennlp.data.dataset_readers.dataset_reader import DatasetReader
 from allennlp.data.fields import Field, TextField, SequenceLabelField,TensorField
 from allennlp.data.instance import Instance
 from allennlp.data.token_indexers import TokenIndexer
-from allennlp.data.tokenizers import Tokenizer, WhitespaceTokenizer
-
+from allennlp.data.tokenizers import Tokenizer, WhitespaceTokenizer, PretrainedTransformerTokenizer
 
 @DatasetReader.register("birnn_sent_reader")
 class BiRNNSentReader(DatasetReader):
@@ -27,7 +26,8 @@ class BiRNNSentReader(DatasetReader):
     ) -> None:
         super().__init__(manual_distributed_sharding=True, manual_multiprocess_sharding=True, **kwargs)
         self.data_path = data_path
-        self._tokenizer = tokenizer or WhitespaceTokenizer()
+        #self._tokenizer = tokenizer or WhitespaceTokenizer()
+        self._tokenizer = PretrainedTransformerTokenizer(model_name="xlm-roberta-large")
         self._token_indexers_src = token_indexers_src
         self._token_indexers_tgt = token_indexers_tgt
         self.sentence_level = sentence_level
@@ -60,7 +60,7 @@ class BiRNNSentReader(DatasetReader):
         fields: Dict[str, Field] = {}
         src = self._tokenizer.tokenize(src.strip())
         tgt = self._tokenizer.tokenize(tgt.strip())
-
+        
         src_tokens = self._tokenizer.add_special_tokens(src)
         tgt_tokens = self._tokenizer.add_special_tokens(tgt)
         tokens_src= TextField(src_tokens, token_indexers=self._token_indexers_src)
