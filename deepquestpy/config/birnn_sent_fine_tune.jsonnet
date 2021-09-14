@@ -21,7 +21,7 @@
   "validation_data_path": "dev",
   "model": {
     "type": "from_archive",
-    "archive_file": "data/et_en_wiki25k_fine_tuned_1M_model/model.tar.gz"},
+    "archive_file": "data/et_en_wiki25k_fine_tuned_10M_model/model.tar.gz"},
   "data_loader": {
     "batch_sampler": {
       "type": "bucket",

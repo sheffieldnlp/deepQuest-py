@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "type": "birnn_sent_reader",
-    "data_path": "datasets/any_en_wiki_matrix",
+    "data_path": "datasets/ro_en_mlqe",
     "token_indexers_src": {
       "tokens": {
         "type": "single_id",
@@ -17,8 +17,8 @@
       }
     }
   },
-  "train_data_path": "122k_train",
-  "validation_data_path": "122k_dev",
+  "train_data_path": "train",
+  "validation_data_path": "dev",
   "model": {
     "type": "birnn",
    "text_field_embedder_src": {
@@ -67,7 +67,7 @@
     }
   },
   "trainer": {
-    "num_epochs": 200,
+    "num_epochs": 50,
     "patience": 15,
     "validation_metric": "+pearson",
     "optimizer": {
