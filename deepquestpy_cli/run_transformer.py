@@ -57,6 +57,20 @@ def main():
             name=f"{data_args.src_lang}-{data_args.tgt_lang}",
             data_dir=data_args.data_dir,
         )
+    elif data_args.dataset_name in ["mqm_google"]:
+        data_files = {}
+        if data_args.train_file is not None:
+            data_files["train"] = data_args.train_file
+        if data_args.validation_file is not None:
+            data_files["validation"] = data_args.validation_file
+        if data_args.test_file is not None:
+            data_files["test"] = data_args.test_file
+        raw_datasets = load_dataset(
+            f"{DATASETS_LOADERS_DIR}/{data_args.dataset_name}",
+            name=f"{data_args.src_lang}-{data_args.tgt_lang}",
+            data_files=data_files,
+            download_mode="force_redownload",
+        )
     elif data_args.dataset_name is not None:
         raw_datasets = load_dataset(data_args.dataset_name, name=f"{data_args.src_lang}-{data_args.tgt_lang}")
     else:

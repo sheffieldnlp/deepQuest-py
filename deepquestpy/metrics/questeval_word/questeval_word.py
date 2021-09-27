@@ -1,8 +1,6 @@
 import numpy as np
-from collections import Counter
 
 from sklearn.metrics import f1_score, matthews_corrcoef
-from scipy.stats import pearsonr
 
 import datasets
 

@@ -53,6 +53,7 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
         tgt_lang = self.data_args.tgt_lang
         label_all_tokens = self.data_args.label_all_tokens
         labels_in_gaps = self.data_args.labels_in_gaps
+        label_column_name = self.data_args.label_column_name
 
         tokenized_inputs = self.tokenizer(
             text=[e[src_lang].split() for e in examples["translation"]],
@@ -63,13 +64,11 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
             is_split_into_words=True,
         )
         tokenized_inputs["length_source"] = [len(e[src_lang].split()) for e in examples["translation"]]
+        tokenized_inputs["length_target"] = [len(e[tgt_lang].split()) for e in examples["translation"]]
         ids_words = []
-        if len(examples["mt_tags"][0]) > 0:  # to verify that there are labels
+        if len(examples[label_column_name][0]) > 0:  # to verify that there are labels
             labels_word = []
-            labels_sent = []
-            for i, (hter, label_src, label_tgt) in enumerate(
-                zip(examples["hter"], examples["src_tags"], examples["mt_tags"])
-            ):
+            for i, (label_src, label_tgt) in enumerate(zip(examples["src_tags"], examples[label_column_name])):
                 # remove the labels for GAPS in target
                 if labels_in_gaps:
                     label_tgt = [l for j, l in enumerate(label_tgt) if j % 2 != 0]
@@ -95,10 +94,8 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
                         label_ids.append(self.label_to_id[label[word_idx]] if label_all_tokens else -100)
                     previous_word_idx = word_idx
                 labels_word.append(label_ids)
-                labels_sent.append(hter)
                 ids_words.append(word_ids)
             tokenized_inputs["labels"] = labels_word
-            tokenized_inputs["score_sent"] = labels_sent
         else:
             ids_words = [tokenized_inputs.word_ids(batch_index=i) for i in range(len(examples["translation"]))]
         tokenized_inputs["ids_words"] = ids_words
@@ -166,10 +163,15 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
 
         # Split in src and tgt
         preds_src, preds_tgt = [], []
-        for preds, src_length in zip(true_predictions, tokenized_eval_dataset["length_source"]):
+        for i, (preds, src_length, tgt_length) in enumerate(
+            zip(true_predictions, tokenized_eval_dataset["length_source"], tokenized_eval_dataset["length_target"])
+        ):
             preds_src.append(preds[:src_length])
             # For the target side we predict OK by default for the GAPS
             preds_tgt_no_gaps = preds[src_length:]
+            # assert len(preds_tgt_no_gaps) == tgt_length, f"{i}: {len(preds_tgt_no_gaps)} != {tgt_length}"
+            if len(preds_tgt_no_gaps) != tgt_length:
+                print(f"{i}: {len(preds_tgt_no_gaps)} != {tgt_length}")
             if self.data_args.labels_in_gaps:
                 preds_tgt_with_gaps = [self.label_to_id[self.label_list.index("OK")]] * (2 * len(preds_tgt_no_gaps) + 1)
                 for i, tag in enumerate(preds_tgt_no_gaps):

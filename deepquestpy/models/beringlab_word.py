@@ -125,3 +125,61 @@ class BeringLabWord(TransformerDeepQuestModelWord):
             self.tokenizer, pad_to_multiple_of=8 if self.training_args.fp16 else None
         )
 
+    def _preprocess_examples(self, examples):
+        src_lang = self.data_args.src_lang
+        tgt_lang = self.data_args.tgt_lang
+        label_all_tokens = self.data_args.label_all_tokens
+        labels_in_gaps = self.data_args.labels_in_gaps
+        label_column_name = self.data_args.label_column_name
+
+        tokenized_inputs = self.tokenizer(
+            text=[e[src_lang].split() for e in examples["translation"]],
+            text_pair=[e[tgt_lang].split() for e in examples["translation"]],
+            padding="max_length" if self.data_args.pad_to_max_length else False,
+            truncation=True,
+            # We use this argument because the texts in our dataset are lists of words (with a label for each word).
+            is_split_into_words=True,
+        )
+        tokenized_inputs["length_source"] = [len(e[src_lang].split()) for e in examples["translation"]]
+        tokenized_inputs["length_target"] = [len(e[tgt_lang].split()) for e in examples["translation"]]
+        ids_words = []
+        if len(examples[label_column_name][0]) > 0:  # to verify that there are labels
+            labels_word = []
+            labels_sent = []
+            for i, (hter, label_src, label_tgt) in enumerate(
+                zip(examples["hter"], examples["src_tags"], examples[label_column_name])
+            ):
+                # remove the labels for GAPS in target
+                if labels_in_gaps:
+                    label_tgt = [l for j, l in enumerate(label_tgt) if j % 2 != 0]
+                label = label_src
+                word_ids = tokenized_inputs.word_ids(batch_index=i)
+                previous_word_idx = None
+                label_ids = []
+                count_special = 0  # this variable helps keep track on when to change from src labels to tgt labels
+                for word_idx in word_ids:
+                    # Special tokens have a word id that is None. We set the label to -100 so they are automatically
+                    # ignored in the loss function.
+                    if word_idx is None:
+                        label_ids.append(-100)
+                        count_special += 1
+                        if count_special == 3:  # two from start and end of src, and one from start of tgt
+                            label = label_tgt
+                    # We set the label for the first token of each word.
+                    elif word_idx != previous_word_idx:
+                        label_ids.append(self.label_to_id[label[word_idx]])
+                    # For the other tokens in a word, we set the label to either the current label or -100, depending on
+                    # the label_all_tokens flag.
+                    else:
+                        label_ids.append(self.label_to_id[label[word_idx]] if label_all_tokens else -100)
+                    previous_word_idx = word_idx
+                labels_word.append(label_ids)
+                labels_sent.append(hter)
+                ids_words.append(word_ids)
+            tokenized_inputs["labels"] = labels_word
+            tokenized_inputs["score_sent"] = labels_sent
+        else:
+            ids_words = [tokenized_inputs.word_ids(batch_index=i) for i in range(len(examples["translation"]))]
+        tokenized_inputs["ids_words"] = ids_words
+        return tokenized_inputs
+
