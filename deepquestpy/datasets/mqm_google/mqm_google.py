@@ -46,6 +46,7 @@ class MQMGoogle(datasets.GeneratorBasedBuilder):
             features=datasets.Features(
                 {
                     "translation": datasets.Translation(languages=(self.config.src_lg, self.config.tgt_lg)),
+                    "src_tags": datasets.Sequence(datasets.ClassLabel(names=["BAD", "OK"])),
                     "bad_labels": datasets.Sequence(datasets.ClassLabel(names=["BAD", "OK"])),
                 }
             ),
