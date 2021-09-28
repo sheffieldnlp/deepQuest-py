@@ -93,7 +93,7 @@ def main():
             if split in raw_datasets:
                 features = raw_datasets[split].features
                 break
-        label_list = features[data_args.label_column_name].feature.names
+        label_list = features[data_args.label_column_name_tgt].feature.names
         deepquest_model.set_label_list(label_list)
 
     # Preprocess the datasets

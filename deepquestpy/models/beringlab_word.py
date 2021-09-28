@@ -41,7 +41,7 @@ class RobertaForQualityEstimationWord(RobertaPreTrainedModel):
         head_mask=None,
         inputs_embeds=None,
         labels=None,
-        score_sent=None,
+        sent_label=None,
         output_attentions=None,
         output_hidden_states=None,
         return_dict=None,
@@ -74,10 +74,10 @@ class RobertaForQualityEstimationWord(RobertaPreTrainedModel):
         logits_wordlevel = self.classifier_wordlevel(sequence_output)
 
         loss = None
-        if score_sent is not None and labels is not None:
+        if sent_label is not None and labels is not None:
             # sentence-level (regression)
             loss_fct_sent = MSELoss()
-            loss_sentlevel = loss_fct_sent(logits_sentlevel.view(-1), score_sent.view(-1))
+            loss_sentlevel = loss_fct_sent(logits_sentlevel.view(-1), sent_label.view(-1))
 
             # word-level
             weights = [3.0, 1.0]  # additional weight for the BAD tags ({0: 'BAD', 1: 'OK'})
@@ -130,7 +130,9 @@ class BeringLabWord(TransformerDeepQuestModelWord):
         tgt_lang = self.data_args.tgt_lang
         label_all_tokens = self.data_args.label_all_tokens
         labels_in_gaps = self.data_args.labels_in_gaps
-        label_column_name = self.data_args.label_column_name
+        label_column_name_tgt = self.data_args.label_column_name_tgt
+        label_column_name_src = self.data_args.label_column_name_src
+        label_column_name_sent = self.data_args.label_column_name_sent
 
         tokenized_inputs = self.tokenizer(
             text=[e[src_lang].split() for e in examples["translation"]],
@@ -143,11 +145,11 @@ class BeringLabWord(TransformerDeepQuestModelWord):
         tokenized_inputs["length_source"] = [len(e[src_lang].split()) for e in examples["translation"]]
         tokenized_inputs["length_target"] = [len(e[tgt_lang].split()) for e in examples["translation"]]
         ids_words = []
-        if len(examples[label_column_name][0]) > 0:  # to verify that there are labels
+        if len(examples[label_column_name_tgt][0]) > 0:  # to verify that there are labels
             labels_word = []
             labels_sent = []
-            for i, (hter, label_src, label_tgt) in enumerate(
-                zip(examples["hter"], examples["src_tags"], examples[label_column_name])
+            for i, (label_sent, label_src, label_tgt) in enumerate(
+                zip(examples[label_column_name_sent], examples[label_column_name_src], examples[label_column_name_tgt])
             ):
                 # remove the labels for GAPS in target
                 if labels_in_gaps:
@@ -174,10 +176,10 @@ class BeringLabWord(TransformerDeepQuestModelWord):
                         label_ids.append(self.label_to_id[label[word_idx]] if label_all_tokens else -100)
                     previous_word_idx = word_idx
                 labels_word.append(label_ids)
-                labels_sent.append(hter)
+                labels_sent.append(label_sent)
                 ids_words.append(word_ids)
             tokenized_inputs["labels"] = labels_word
-            tokenized_inputs["score_sent"] = labels_sent
+            tokenized_inputs["sent_label"] = labels_sent
         else:
             ids_words = [tokenized_inputs.word_ids(batch_index=i) for i in range(len(examples["translation"]))]
         tokenized_inputs["ids_words"] = ids_words

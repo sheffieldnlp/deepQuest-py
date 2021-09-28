@@ -53,7 +53,8 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
         tgt_lang = self.data_args.tgt_lang
         label_all_tokens = self.data_args.label_all_tokens
         labels_in_gaps = self.data_args.labels_in_gaps
-        label_column_name = self.data_args.label_column_name
+        label_column_name_tgt = self.data_args.label_column_name_tgt
+        label_column_name_src = self.data_args.label_column_name_src
 
         tokenized_inputs = self.tokenizer(
             text=[e[src_lang].split() for e in examples["translation"]],
@@ -65,41 +66,73 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
         )
         tokenized_inputs["length_source"] = [len(e[src_lang].split()) for e in examples["translation"]]
         tokenized_inputs["length_target"] = [len(e[tgt_lang].split()) for e in examples["translation"]]
-        ids_words = []
-        if len(examples[label_column_name][0]) > 0:  # to verify that there are labels
-            labels_word = []
-            for i, (label_src, label_tgt) in enumerate(zip(examples["src_tags"], examples[label_column_name])):
-                # remove the labels for GAPS in target
-                if labels_in_gaps:
-                    label_tgt = [l for j, l in enumerate(label_tgt) if j % 2 != 0]
-                label = label_src
-                word_ids = tokenized_inputs.word_ids(batch_index=i)
-                previous_word_idx = None
-                label_ids = []
-                count_special = 0  # this variable helps keep track on when to change from src labels to tgt labels
-                for word_idx in word_ids:
-                    # Special tokens have a word id that is None. We set the label to -100 so they are automatically
-                    # ignored in the loss function.
-                    if word_idx is None:
-                        label_ids.append(-100)
-                        count_special += 1
-                        if count_special == 3:  # two from start and end of src, and one from start of tgt
-                            label = label_tgt
-                    # We set the label for the first token of each word.
-                    elif word_idx != previous_word_idx:
-                        label_ids.append(self.label_to_id[label[word_idx]])
-                    # For the other tokens in a word, we set the label to either the current label or -100, depending on
-                    # the label_all_tokens flag.
-                    else:
-                        label_ids.append(self.label_to_id[label[word_idx]] if label_all_tokens else -100)
-                    previous_word_idx = word_idx
-                labels_word.append(label_ids)
-                ids_words.append(word_ids)
-            tokenized_inputs["labels"] = labels_word
+
+        if len(examples[label_column_name_tgt][0]) > 0:  # to verify that there are labels
+            ids_words, labels_words = self._preprocess_src_and_tgt_labels(
+                examples,
+                tokenized_inputs,
+                label_column_name_src,
+                label_column_name_tgt,
+                labels_in_gaps,
+                label_all_tokens,
+            )
+            tokenized_inputs["labels"] = labels_words
         else:
             ids_words = [tokenized_inputs.word_ids(batch_index=i) for i in range(len(examples["translation"]))]
+
         tokenized_inputs["ids_words"] = ids_words
+
         return tokenized_inputs
+
+    def _preprocess_src_and_tgt_labels(
+        self, examples, tokenized_inputs, label_column_name_src, label_column_name_tgt, labels_in_gaps, label_all_tokens
+    ):
+        if label_column_name_src in examples:
+            all_tokens_labels = zip(examples[label_column_name_src], examples[label_column_name_tgt])
+        else:
+            all_tokens_labels = examples[label_column_name_tgt]
+        ids_words = []
+        labels_word = []
+        for i, batch_tokens_labels in enumerate(all_tokens_labels):
+            if label_column_name_src in examples:
+                label_src, label_tgt = batch_tokens_labels
+            else:
+                label_src = None
+                label_tgt = batch_tokens_labels
+            # remove the labels for GAPS in target
+            if labels_in_gaps:
+                label_tgt = [l for j, l in enumerate(label_tgt) if j % 2 != 0]
+
+            label = label_src
+            word_ids = tokenized_inputs.word_ids(batch_index=i)
+            previous_word_idx = None
+            label_ids = []
+            count_special = 0  # this variable helps keep track on when to change from src labels to tgt labels
+            for word_idx in word_ids:
+                # Special tokens have a word id that is None. We set the label to -100 so they are automatically
+                # ignored in the loss function.
+                if word_idx is None:
+                    label_ids.append(-100)
+                    count_special += 1
+                    if count_special == 3:  # two from start and end of src, and one from start of tgt
+                        label = label_tgt
+                # We set the label for the first token of each word.
+                elif word_idx != previous_word_idx:
+                    if label is not None:
+                        label_ids.append(self.label_to_id[label[word_idx]])
+                    else:
+                        label_ids.append(-100)
+                # For the other tokens in a word, we set the label to either the current label or -100, depending on
+                # the label_all_tokens flag.
+                else:
+                    if label is not None:
+                        label_ids.append(self.label_to_id[label[word_idx]] if label_all_tokens else -100)
+                    else:
+                        label_ids.append(-100)
+                previous_word_idx = word_idx
+            labels_word.append(label_ids)
+            ids_words.append(word_ids)
+        return ids_words, labels_word
 
     def get_model(self):
         # Load pretrained model
@@ -129,8 +162,15 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
         preds_src, preds_tgt = self._get_true_predictions_for_source_and_target(
             self.evaluation_dataset_for_metrics, raw_predictions, raw_labels
         )
-        refs_src = [[tag for tag in tags] for tags in self.evaluation_dataset_for_metrics["src_tags"]]
-        refs_tgt = [[tag for tag in tags] for tags in self.evaluation_dataset_for_metrics["mt_tags"]]
+
+        label_column_name_tgt = self.data_args.label_column_name_tgt
+        label_column_name_src = self.data_args.label_column_name_src
+
+        refs_tgt = [[tag for tag in tags] for tags in self.evaluation_dataset_for_metrics[label_column_name_tgt]]
+        if label_column_name_src in self.evaluation_dataset_for_metrics:
+            refs_src = [[tag for tag in tags] for tags in self.evaluation_dataset_for_metrics[label_column_name_src]]
+        else:
+            refs_src = [[]] * len(preds_src)
 
         metrics = metric.compute(
             references=[{"src": ref_src, "tgt": ref_tgt} for ref_src, ref_tgt in zip(refs_src, refs_tgt)],
@@ -166,12 +206,15 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
         for i, (preds, src_length, tgt_length) in enumerate(
             zip(true_predictions, tokenized_eval_dataset["length_source"], tokenized_eval_dataset["length_target"])
         ):
-            preds_src.append(preds[:src_length])
-            # For the target side we predict OK by default for the GAPS
-            preds_tgt_no_gaps = preds[src_length:]
-            # assert len(preds_tgt_no_gaps) == tgt_length, f"{i}: {len(preds_tgt_no_gaps)} != {tgt_length}"
-            if len(preds_tgt_no_gaps) != tgt_length:
-                print(f"{i}: {len(preds_tgt_no_gaps)} != {tgt_length}")
+            if src_length + tgt_length == len(preds):
+                preds_src.append(preds[:src_length])
+                preds_tgt_no_gaps = preds[src_length:]
+            else:
+                # There are no predictions for the source, only for the target
+                preds_src.append([])
+                assert tgt_length == len(preds)
+                preds_tgt_no_gaps = preds
+            assert len(preds_tgt_no_gaps) == tgt_length, f"{i}: {len(preds_tgt_no_gaps)} != {tgt_length}"
             if self.data_args.labels_in_gaps:
                 preds_tgt_with_gaps = [self.label_to_id[self.label_list.index("OK")]] * (2 * len(preds_tgt_no_gaps) + 1)
                 for i, tag in enumerate(preds_tgt_no_gaps):

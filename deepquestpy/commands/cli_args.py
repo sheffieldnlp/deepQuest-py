@@ -59,8 +59,17 @@ class DataArguments:
             "value if set."
         },
     )
-    label_column_name: str = field(
-        default="label", metadata={"help": "The name of the column in the dataset that contains the labels."},
+    label_column_name_src: str = field(
+        default="src_tags",
+        metadata={"help": "The name of the column in the dataset that contains the word-level labels for the source."},
+    )
+    label_column_name_tgt: str = field(
+        default="mt_tags",
+        metadata={"help": "The name of the column in the dataset that contains the word-level labels for target."},
+    )
+    label_column_name_sent: str = field(
+        default="sent_label",
+        metadata={"help": "The name of the column in the dataset that contains the labels for the sentence-pair."},
     )
     label_all_tokens: bool = field(
         default=False,

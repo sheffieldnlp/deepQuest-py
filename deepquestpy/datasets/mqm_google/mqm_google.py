@@ -46,7 +46,6 @@ class MQMGoogle(datasets.GeneratorBasedBuilder):
             features=datasets.Features(
                 {
                     "translation": datasets.Translation(languages=(self.config.src_lg, self.config.tgt_lg)),
-                    "src_tags": datasets.Sequence(datasets.ClassLabel(names=["BAD", "OK"])),
                     "bad_labels": datasets.Sequence(datasets.ClassLabel(names=["BAD", "OK"])),
                 }
             ),
@@ -82,6 +81,5 @@ class MQMGoogle(datasets.GeneratorBasedBuilder):
         for id, row in df_translations.iterrows():
             yield id, {
                 "translation": {source_lg: str(row["original"]).strip(), target_lg: str(row["translation"]).strip()},
-                "src_tags": ["OK"] * len(str(row["original"]).strip().split()),
                 "bad_labels": [] if split == "test" else str(row["bad_labels"]).strip().split(),
             }
