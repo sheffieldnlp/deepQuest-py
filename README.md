@@ -76,3 +76,27 @@ Links to trained BiRNN Student models:
 	- [Si-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/birnn_wiki100k_si_en.tar.gz)
 	- [Ne-En](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/birnn_wiki100k_ne_en.tar.gz)
 	- [En-Zh](https://www.quest.dcs.shef.ac.uk/dq_student_birnn/birnn_wiki100k_en_zh.tar.gz)
+
+## Licence
+deepQuest-py is licenced under a CC BY-NC-SA licence.
+
+## Citation
+
+If you use deepQuest-py in your research, please cite **deepQuest-py: Large and Distilled Models for Quality Estimation**
+
+```
+@inproceedings{alva-manchego-etal-2021-deepquestpy,
+    title = "deep{Q}uest-py: {L}arge and Distilled Models for Quality Estimation",
+    author = "Alva-Manchego, Fernando  and
+      Obamuyide, Abiola  and
+      Gajbhiye, Amit  and
+      Blain, Fr{\'e}d{\'e}ric  and
+      Fomicheva, Marina  and
+      Specia, Lucia",
+    booktitle = "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing: System Demonstrations",
+    month = nov,
+    year = "2021",
+    address = "Virtual",
+    publisher = "Association for Computational Linguistics",
+}
+```
