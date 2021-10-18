@@ -82,7 +82,7 @@ deepQuest-py is licenced under a CC BY-NC-SA licence.
 
 ## Citation
 
-If you use deepQuest-py in your research, please cite **deepQuest-py: Large and Distilled Models for Quality Estimation**
+If you use deepQuest-py in your research, please cite:
 
 ```
 @inproceedings{alva-manchego-etal-2021-deepquestpy,
