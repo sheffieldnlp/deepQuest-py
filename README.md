@@ -8,10 +8,10 @@ We provide access to:
 
 deepQuest-py provides implementations of several models for Quality Estimation proposed in recent research:
 
-- [Knowledge Distillation for Quality Estimation (Gajbhiye et al., 2021)](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples/knowledge_distillation/README.md)
-- [TransQuest at WMT2020: Sentence-Level Direct Assessment (Ranasinghe et al., 2020)](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples/monotransquest/README.md)
-- [Two-Phase Cross-Lingual Language Model Fine-Tuning for Machine Translation Quality Estimation (Lee, 2020)](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples/beringlab/README.md)
-- [deepQuest: A Framework for Neural-based Quality Estimation (Ive et al., 2018)](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples/birnn/README.md)
+- [Knowledge Distillation for Quality Estimation (Gajbhiye et al., 2021)](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples/knowledge_distillation)
+- [TransQuest at WMT2020: Sentence-Level Direct Assessment (Ranasinghe et al., 2020)](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples/monotransquest)
+- [Two-Phase Cross-Lingual Language Model Fine-Tuning for Machine Translation Quality Estimation (Lee, 2020)](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples/beringlab)
+- [deepQuest: A Framework for Neural-based Quality Estimation (Ive et al., 2018)](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples/birnn)
 
 ## Online Demo
 Check out our [web tool](https://dq.fredblain.org/) to try out most of our trained models on your own data!
