@@ -6,7 +6,7 @@ We provide access to:
 - **state-of-the-art** models based on pre-trained Transformers for sentence-level and word-level Quality Estimation;
 - **light-weight and efficient** sentence-level models implemented via knowledge distillation.
 
-deepQuest-py provides implementations of several models for Quality Estimation proposed in recent research:
+deepQuest-py provides implementations of several models for Quality Estimation proposed in recent research (check the provided [examples](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples) for specific instructions):
 
 - [Knowledge Distillation for Quality Estimation (Gajbhiye et al., 2021)](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples/knowledge_distillation)
 - [TransQuest at WMT2020: Sentence-Level Direct Assessment (Ranasinghe et al., 2020)](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples/monotransquest)
