@@ -13,7 +13,7 @@ deepQuest-py provides implementations of several models for Quality Estimation p
 - [Two-Phase Cross-Lingual Language Model Fine-Tuning for Machine Translation Quality Estimation (Lee, 2020)](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples/beringlab)
 - [deepQuest: A Framework for Neural-based Quality Estimation (Ive et al., 2018)](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples/birnn)
 
-Check our [examples](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples) for instructions on how to run specific models.
+Check our [examples](https://github.com/sheffieldnlp/deepQuest-py/tree/main/examples) for instructions on how to train and test specific models.
 
 ## Online Demo
 Check out our [web tool](https://dq.fredblain.org/) to try out most of our trained models on your own data!
