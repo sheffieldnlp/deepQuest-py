@@ -26,7 +26,6 @@ git clone https://github.com/sheffieldnlp/deepQuest-py.git
 cd deepQuest-py
 pip install -e .
 ```
-
 ## Licence
 deepQuest-py is licenced under a CC BY-NC-SA licence.
 
