@@ -1,6 +1,6 @@
-# TransQuest at WMT2020: Sentence-Level Direct Assessment (Ranasinghe et al., 2020)
+# TransQuest at WMT2020: Sentence-Level Direct Assessment
 
-This page describes the steps to train the models from [TransQuest at WMT2020: Sentence-Level Direct Assessment (Ranasinghe et al., 2020)](https://aclanthology.org/2020.wmt-1.122/).
+[Ranasinghe et al. (2020)](https://aclanthology.org/2020.wmt-1.122/) propose models for **sentence-level** Quality Estimation based on fine-tuning XLM-R on gold data. In particular, deepQuest-py provides an implementation of the **MonoTransQuest** architecture.
 
 ## WMT20 Shared Task on Quality Estimation - Task 1
 

@@ -1,6 +1,6 @@
-# Two-Phase Cross-Lingual Language Model Fine-Tuning for Machine Translation Quality Estimation (Lee, 2020)
+# Two-Phase Cross-Lingual Language Model Fine-Tuning for Machine Translation Quality Estimation
 
-This page describes the steps to train the models from [Two-Phase Cross-Lingual Language Model Fine-Tuning for Machine Translation Quality Estimation (Lee, 2020)](https://aclanthology.org/2020.wmt-1.118).
+[Lee (2020)](https://aclanthology.org/2020.wmt-1.118) propose an achitecture for **word-level** models for Quality Estimation based on finetuning XLM-R in a multitask fashion (sentence-level and word-level predictions) using both syntectic and gold data.
 
 ## MLQE-PE
 

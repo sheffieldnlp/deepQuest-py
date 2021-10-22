@@ -1,6 +1,7 @@
-# Knowledge Distillation for Quality Estimation (Gajbhiye et al., 2021)
+# Knowledge Distillation for Quality Estimation
 
-This page describes the steps to train the models from [Knowledge Distillation for Quality Estimation (Gajbhiye et al., 2021)](https://aclanthology.org/2021.findings-acl.452/).
+[Gajbhiye et al. (2021)](https://aclanthology.org/2021.findings-acl.452/) propose a method to directly distil **sentence-level** Quality Estimation (QE) models, where the student architecture can be completely different from that of the teacher. 
+Namely, they distill large and powerful **QE models based on XLM-R into small bidirectional RNN-based models**.
 
 ## Training and Evaluation (Gold Data)
 

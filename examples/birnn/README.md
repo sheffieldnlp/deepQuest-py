@@ -1,6 +1,6 @@
-# deepQuest: A Framework for Neural-based Quality Estimation (Ive et al., 2018)
+# deepQuest: A Framework for Neural-based Quality Estimation
 
-This page describes the steps to train the models from [deepQuest: A Framework for Neural-based Quality Estimation (Ive et al., 2018)](https://aclanthology.org/C18-1266/).
+[Ive et al. (2018)](https://aclanthology.org/C18-1266/) propose an architecture for **sentence-level** models for Quality Estimation based on Bidirectional Recurrent Neural Networks.
 
 ## BiRNN (Word and Sentence Level)
 
