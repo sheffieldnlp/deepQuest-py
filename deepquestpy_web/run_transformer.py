@@ -39,11 +39,7 @@ class ServerArguments:
 
 def create_dataset_from_json(data_json, data_args):
     formatted_data = [
-        {
-            "translation": {data_args.src_lang: json_line["text_a"], data_args.tgt_lang: json_line["text_b"]},
-            "label": -10_000,
-        }
-        for json_line in data_json
+        {"translation": {data_args.src_lang: json_line["text_a"], data_args.tgt_lang: json_line["text_b"]}, "label": -10_000,} for json_line in data_json
     ]
     return datasets.Dataset.from_pandas(pd.DataFrame(formatted_data))
 
@@ -77,17 +73,13 @@ def main():
     # Read the arguments
     parser = HfArgumentParser((ModelArguments, DataArguments, TrainingArguments, ServerArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
-        model_args, data_args, training_args, server_args = parser.parse_json_file(
-            json_file=os.path.abspath(sys.argv[1])
-        )
+        model_args, data_args, training_args, server_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args, server_args = parser.parse_args_into_dataclasses()
 
     # Setup logging
     logging.basicConfig(
-        format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
-        datefmt="%m/%d/%Y %H:%M:%S",
-        handlers=[logging.StreamHandler(server_args.log_path)],
+        format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s", datefmt="%m/%d/%Y %H:%M:%S", handlers=[logging.StreamHandler(server_args.log_path)],
     )
     logger.setLevel(logging.INFO if training_args.should_log else logging.WARN)
 
@@ -107,10 +99,7 @@ def main():
 
     # Initialize Trainer
     trainer = Trainer(
-        model=deepquest_model.get_model(),
-        args=training_args,
-        tokenizer=deepquest_model.get_tokenizer(),
-        data_collator=deepquest_model.get_data_collator(),
+        model=deepquest_model.get_model(), args=training_args, tokenizer=deepquest_model.get_tokenizer(), data_collator=deepquest_model.get_data_collator(),
     )
 
     @app.route("/predict", methods=["POST"])

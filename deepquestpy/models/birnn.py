@@ -8,6 +8,7 @@ from allennlp.modules.attention import DotProductAttention
 from allennlp.nn.util import get_text_field_mask, weighted_sum
 from allennlp.training.metrics import PearsonCorrelation
 
+
 @Model.register("birnn")
 class BiRNN(Model):
     """
@@ -15,6 +16,7 @@ class BiRNN(Model):
     [0] https://www.aclweb.org/anthology/C18-1266.pdf
     [1] https://www.aclweb.org/anthology/N16-1174.pdf
     """
+
     def __init__(
         self,
         vocab: Vocabulary,
@@ -44,8 +46,8 @@ class BiRNN(Model):
         self._linear_layer_src = torch.nn.Linear(src_out_dim, src_out_dim)
         self._linear_layer_tgt = torch.nn.Linear(tgt_out_dim, tgt_out_dim)
 
-        self.context_weights_src = torch.nn.Parameter(torch.nn.init.xavier_uniform_(torch.rand((1,src_out_dim))))
-        self.context_weights_tgt = torch.nn.Parameter(torch.nn.init.xavier_uniform_(torch.rand((1,tgt_out_dim))))
+        self.context_weights_src = torch.nn.Parameter(torch.nn.init.xavier_uniform_(torch.rand((1, src_out_dim))))
+        self.context_weights_tgt = torch.nn.Parameter(torch.nn.init.xavier_uniform_(torch.rand((1, tgt_out_dim))))
 
         if dropout:
             self._dropout = torch.nn.Dropout(dropout)
@@ -62,7 +64,8 @@ class BiRNN(Model):
         self._pearson = PearsonCorrelation()
         self._loss = torch.nn.MSELoss()
 
-    def forward(self, tokens_src: TextFieldTensors, tokens_tgt: TextFieldTensors, labels: torch.FloatTensor = None, t_pred: torch.FloatTensor = None
+    def forward(
+        self, tokens_src: TextFieldTensors, tokens_tgt: TextFieldTensors, labels: torch.FloatTensor = None, t_pred: torch.FloatTensor = None
     ) -> Dict[str, torch.Tensor]:
 
         embedded_text_src = self._text_field_embedder_src(tokens_src)
@@ -81,28 +84,28 @@ class BiRNN(Model):
         encoded_text_src = self._linear_layer_src(encoded_text_src)
         encoded_text_tgt = self._linear_layer_tgt(encoded_text_tgt)
 
-        attention_dist_src = self.attention(self.context_weights_src.expand(encoded_text_src.size()[0],-1),encoded_text_src)
+        attention_dist_src = self.attention(self.context_weights_src.expand(encoded_text_src.size()[0], -1), encoded_text_src)
         encoded_text_src = weighted_sum(encoded_text_src, attention_dist_src)
 
-        attention_dist_tgt = self.attention(self.context_weights_tgt.expand(encoded_text_tgt.size()[0], -1),encoded_text_tgt)
+        attention_dist_tgt = self.attention(self.context_weights_tgt.expand(encoded_text_tgt.size()[0], -1), encoded_text_tgt)
         encoded_text_tgt = weighted_sum(encoded_text_tgt, attention_dist_tgt)
 
-        encoded_text = torch.cat([encoded_text_src,encoded_text_tgt],dim=-1)
+        encoded_text = torch.cat([encoded_text_src, encoded_text_tgt], dim=-1)
         scores = torch.sigmoid(self._linear_layer(encoded_text).squeeze())
-        
+
         output_dict = {"scores": scores}
 
         # The changes for adding knowledge distillation are included here.
         if labels is not None:
 
             if self.kd_without_gold_data and self.kd_with_gold_data:
-                raise ValueError ("kd_without_gold_data and kd_with_gold_data options cannot be true simultaneously; Please set only one in the config file.")
+                raise ValueError("kd_without_gold_data and kd_with_gold_data options cannot be true simultaneously; Please set only one in the config file.")
 
             if self.kd_with_gold_data and not self.kd_without_gold_data:
                 if self.alpha == 0:
                     raise ValueError("When kd_with_gold_data flag is true, please specify a non-zero value for  alpha in config file")
                 else:
-                    print ("Calling Distillation With GOLD data")
+                    print("Calling Distillation With GOLD data")
 
                     distill_loss = self._loss(scores, t_pred.view(-1))
                     output_dict["d_loss"] = distill_loss
@@ -117,7 +120,7 @@ class BiRNN(Model):
 
             elif self.kd_without_gold_data and not self.kd_with_gold_data:
 
-                print ("Calling Distillation WITHOUT GOLD data")
+                print("Calling Distillation WITHOUT GOLD data")
 
                 loss = self._loss(scores, t_pred.view(-1))
 
@@ -125,13 +128,13 @@ class BiRNN(Model):
                 self._pearson(scores, labels)
 
             else:
-                print ("Calling Normal Loss; Without Any Distillation")
+                print("Calling Normal Loss; Without Any Distillation")
                 loss = self._loss(scores, labels.view(-1))
 
                 output_dict["loss"] = loss
                 self._pearson(scores, labels)
 
-            return output_dict        
+        return output_dict
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
         metrics = {"pearson": self._pearson.get_metric(reset)}
