@@ -30,10 +30,10 @@ pip install -e .
 deepQuest-py is licenced under a CC BY-NC-SA licence.
 
 ## Citation
-If you use deepQuest-py in your research, please cite our EMNLP 2021 Demo paper:
+If you use deepQuest-py in your research, please cite our [EMNLP 2021 Demo paper](https://aclanthology.org/2021.emnlp-demo.42.pdf):
 
 ```
-@inproceedings{alva-manchego-etal-2021-deepquestpy,
+@inproceedings{alva-manchego-etal-2021-deepquest,
     title = "deep{Q}uest-py: {L}arge and Distilled Models for Quality Estimation",
     author = "Alva-Manchego, Fernando  and
       Obamuyide, Abiola  and
@@ -44,7 +44,9 @@ If you use deepQuest-py in your research, please cite our EMNLP 2021 Demo paper:
     booktitle = "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing: System Demonstrations",
     month = nov,
     year = "2021",
-    address = "Virtual",
+    address = "Online and Punta Cana, Dominican Republic",
     publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2021.emnlp-demo.42",
+    pages = "382--389",
 }
 ```
