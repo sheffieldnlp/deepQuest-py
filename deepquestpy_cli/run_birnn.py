@@ -17,11 +17,13 @@ def main(args):
                               serialization_dir = args.output_dir,
                               force=args.overwrite_output_dir)
     # Evaluation
-    if args.do_eval:
+    if args.do_eval or args.do_predict:
         archive = load_archive(args.eval_model)
         model = archive.model
         num_model_parameters = sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad)
         reader = archive.validation_dataset_reader if "validation_dataset_reader" in archive else archive.dataset_reader
+        if args.do_predict:
+            reader.do_predict = True
         eval_instances = list(reader.read(args.eval_data_path))
         batch_size = archive.config["data_loader"]["batch_sampler"]["batch_size"]
         eval_loader = SimpleDataLoader(eval_instances, batch_size=batch_size)
@@ -52,11 +54,12 @@ def main(args):
                     pred_file.write("{}\t{}\t{}\t{}\n".format(args.lang_pair, "know_distill", str(line_num), round(pred, 6)))
 
             print ("Predictions are written to :", args.pred_output_file)
+
     return
 
 def cli_main(args):
-    if not args.do_train and not args.do_eval:
-        raise ValueError("Please specify either --do_train to train or --do_eval to evaluate")
+    if not args.do_train and not args.do_eval and not args.do_predict:
+        raise ValueError("Please specify one of: --do_train to train, --do_eval to evaluate or --do_predict to make predictions")
 
     if ( os.path.exists(args.output_dir) and os.listdir(args.output_dir) and args.do_train and not args.overwrite_output_dir
     ):
@@ -84,5 +87,9 @@ if __name__ == "__main__":
     parser.add_argument("--pred_output_file", type=str,default="data/output/predictions.txt", help="Output file to which test predictions are written")
 
     parser.add_argument("--eval_data_path", type=str,default="test", help="Path containing evaluation data (relative to data_path as set in the config_file")
+
+    # prediction arguments
+    parser.add_argument("--do_predict", action="store_true")
+
     args = parser.parse_args()
     cli_main(args)

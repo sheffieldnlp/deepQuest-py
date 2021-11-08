@@ -22,6 +22,7 @@ class BiRNNSentReader(DatasetReader):
         token_indexers_tgt: Dict[str, TokenIndexer] = None,
         sentence_level:bool = True,
         tag_label_namespace = "tag_labels",
+        do_predict:bool = False,
         **kwargs,
     ) -> None:
         super().__init__(manual_distributed_sharding=True, manual_multiprocess_sharding=True, **kwargs)
@@ -32,6 +33,7 @@ class BiRNNSentReader(DatasetReader):
         self._token_indexers_tgt = token_indexers_tgt
         self.sentence_level = sentence_level
         self._tag_label_namespace: str = tag_label_namespace
+        self.do_predict = do_predict
 
     @overrides
     def _read(self, path_name: str):
@@ -69,8 +71,8 @@ class BiRNNSentReader(DatasetReader):
         fields["tokens_src"] = tokens_src
         fields["tokens_tgt"] = tokens_tgt
 
-        fields["labels"] = TensorField(sent_label)
-            
-        fields["t_pred"] = TensorField(t_pred)
+        if not self.do_predict:
+            fields["labels"] = TensorField(sent_label)
+            fields["t_pred"] = TensorField(t_pred)
 
         return Instance(fields)

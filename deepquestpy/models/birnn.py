@@ -131,7 +131,7 @@ class BiRNN(Model):
                 output_dict["loss"] = loss
                 self._pearson(scores, labels)
 
-            return output_dict        
+        return output_dict
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
         metrics = {"pearson": self._pearson.get_metric(reset)}
