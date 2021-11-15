@@ -40,16 +40,13 @@ class TransformerDeepQuestModelSent(DeepQuestModelSent):
 
     def tokenize_datasets(self, datasets):
         return datasets.map(
-            self._preprocess_examples,
-            batched=True,
-            num_proc=self.data_args.preprocessing_num_workers,
-            load_from_cache_file=not self.data_args.overwrite_cache,
+            self._preprocess_examples, batched=True, num_proc=self.data_args.preprocessing_num_workers, load_from_cache_file=not self.data_args.overwrite_cache,
         )
 
     def _preprocess_examples(self, examples):
         src_lang = self.data_args.src_lang
         tgt_lang = self.data_args.tgt_lang
-        label_column_name = self.data_args.label_column_name
+        label_column_name = self.data_args.label_column_name_sent
         tokenized_inputs = self.tokenizer(
             text=[e[src_lang] for e in examples["translation"]],
             text_pair=[e[tgt_lang] for e in examples["translation"]],

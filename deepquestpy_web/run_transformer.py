@@ -39,7 +39,7 @@ class ServerArguments:
 
 def create_dataset_from_json(data_json, data_args):
     formatted_data = [
-        {"translation": {data_args.src_lang: json_line["text_a"], data_args.tgt_lang: json_line["text_b"]}, "label": -10_000,} for json_line in data_json
+        {"translation": {data_args.src_lang: json_line["text_a"], data_args.tgt_lang: json_line["text_b"]}, "sent_label": -10_000,} for json_line in data_json
     ]
     return datasets.Dataset.from_pandas(pd.DataFrame(formatted_data))
 
