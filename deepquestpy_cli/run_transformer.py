@@ -25,9 +25,7 @@ def main():
 
     # Setup logging
     logging.basicConfig(
-        format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
-        datefmt="%m/%d/%Y %H:%M:%S",
-        handlers=[logging.StreamHandler(sys.stdout)],
+        format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s", datefmt="%m/%d/%Y %H:%M:%S", handlers=[logging.StreamHandler(sys.stdout)],
     )
     logger.setLevel(logging.INFO if training_args.should_log else logging.WARN)
 
@@ -47,15 +45,11 @@ def main():
     set_seed(training_args.seed)
 
     # Load the dataset splits
-    if data_args.dataset_name in ["mlqe_pe"]:
-        raw_datasets = load_dataset(
-            f"{DATASETS_LOADERS_DIR}/{data_args.dataset_name}", name=f"{data_args.src_lang}-{data_args.tgt_lang}",
-        )
+    if data_args.dataset_name in ["mlqe_pe", "mlqe_da"]:
+        raw_datasets = load_dataset(f"{DATASETS_LOADERS_DIR}/{data_args.dataset_name}", name=f"{data_args.src_lang}-{data_args.tgt_lang}",)
     elif data_args.dataset_name in ["wmt20_mlqe_synth"]:
         raw_datasets = load_dataset(
-            f"{DATASETS_LOADERS_DIR}/{data_args.dataset_name}",
-            name=f"{data_args.src_lang}-{data_args.tgt_lang}",
-            data_dir=data_args.data_dir,
+            f"{DATASETS_LOADERS_DIR}/{data_args.dataset_name}", name=f"{data_args.src_lang}-{data_args.tgt_lang}", data_dir=data_args.data_dir,
         )
     elif data_args.dataset_name in ["mqm_google"]:
         data_files = {}
@@ -81,9 +75,7 @@ def main():
             data_files["validation"] = data_args.validation_file
         if data_args.test_file is not None:
             data_files["test"] = data_args.test_file
-        raw_datasets = load_dataset(
-            f"{DATASETS_LOADERS_DIR}/custom.py", data_files=data_files, download_mode="force_redownload"
-        )
+        raw_datasets = load_dataset(f"{DATASETS_LOADERS_DIR}/custom.py", data_files=data_files, download_mode="force_redownload")
 
     # Create an instance of a DeepQuestModel
     deepquest_model = get_deepquest_model(model_args.arch_name, model_args, data_args, training_args)
@@ -142,10 +134,7 @@ def main():
         if os.path.isdir(training_args.output_dir) and not training_args.overwrite_output_dir:
             last_checkpoint = get_last_checkpoint(training_args.output_dir)
             if last_checkpoint is None and len(os.listdir(training_args.output_dir)) > 0:
-                raise ValueError(
-                    f"Output directory ({training_args.output_dir}) already exists and is not empty. "
-                    "Use --overwrite_output_dir to overcome."
-                )
+                raise ValueError(f"Output directory ({training_args.output_dir}) already exists and is not empty. " "Use --overwrite_output_dir to overcome.")
             elif last_checkpoint is not None:
                 logger.info(
                     f"Checkpoint detected, resuming training at {last_checkpoint}. To avoid this behavior, change "
@@ -183,9 +172,7 @@ def main():
         predictions = deepquest_model.postprocess_predictions(predictions, labels)
 
         if trainer.is_world_process_zero():
-            deepquest_model.save_output(
-                output_file_path=os.path.join(training_args.output_dir, "predict"), predictions=predictions
-            )
+            deepquest_model.save_output(output_file_path=os.path.join(training_args.output_dir, "predict"), predictions=predictions)
 
         trainer.log_metrics("predict", metrics)
         trainer.save_metrics("predict", metrics)
