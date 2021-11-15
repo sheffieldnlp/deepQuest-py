@@ -60,6 +60,9 @@ class ActiveLearningArguments:
     reduction: str = field(
         default="mean", metadata={"help": ""},
     )
+    max_sample: int = field(
+        default=-1, metadata={"help": ""},
+    )
 
 
 def main():
@@ -182,7 +185,7 @@ def main():
         get_probabilities=trainer.predict_on_dataset,
         heuristic=heuristic,
         ndata_to_label=activelearning_args.n_data_to_label,
-        max_sample=50,
+        max_sample=activelearning_args.max_sample,
         iterations=activelearning_args.iterations,
     )
 
