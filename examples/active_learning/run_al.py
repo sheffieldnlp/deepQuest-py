@@ -37,7 +37,7 @@ class ActiveLearningArguments:
     """
 
     epoch: int = field(
-        default=1, metadata={"help": ""},
+        default=100, metadata={"help": ""},
     )
     batch_size: int = field(
         default=32, metadata={"help": ""},
