@@ -28,23 +28,22 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
     def _load_tokenizer(self):
         if not self.tokenizer:
             self.tokenizer = AutoTokenizer.from_pretrained(
-                self.tokenizer_name,
-                cache_dir=self.model_args.cache_dir,
-                use_fast=True,
-                revision=self.model_args.model_revision,
+                self.tokenizer_name, cache_dir=self.model_args.cache_dir, use_fast=True, revision=self.model_args.model_revision,
             )
 
     def get_tokenizer(self):
         self._load_tokenizer()
         return self.tokenizer
 
-    def tokenize_datasets(self, datasets):
+    def tokenize_datasets(self, datasets, *args, **kwargs):
         self._load_tokenizer()
         tokenized_datasets = datasets.map(
             self._preprocess_examples,
             batched=True,
             num_proc=self.data_args.preprocessing_num_workers,
             load_from_cache_file=not self.data_args.overwrite_cache,
+            *args,
+            **kwargs,
         )
         return tokenized_datasets
 
@@ -69,12 +68,7 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
 
         if len(examples[label_column_name_tgt][0]) > 0:  # to verify that there are labels
             ids_words, labels_words = self._preprocess_src_and_tgt_labels(
-                examples,
-                tokenized_inputs,
-                label_column_name_src,
-                label_column_name_tgt,
-                labels_in_gaps,
-                label_all_tokens,
+                examples, tokenized_inputs, label_column_name_src, label_column_name_tgt, labels_in_gaps, label_all_tokens,
             )
             tokenized_inputs["labels"] = labels_words
         else:
@@ -84,9 +78,7 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
 
         return tokenized_inputs
 
-    def _preprocess_src_and_tgt_labels(
-        self, examples, tokenized_inputs, label_column_name_src, label_column_name_tgt, labels_in_gaps, label_all_tokens
-    ):
+    def _preprocess_src_and_tgt_labels(self, examples, tokenized_inputs, label_column_name_src, label_column_name_tgt, labels_in_gaps, label_all_tokens):
         if label_column_name_src in examples:
             all_tokens_labels = zip(examples[label_column_name_src], examples[label_column_name_tgt])
         else:
@@ -134,6 +126,9 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
             ids_words.append(word_ids)
         return ids_words, labels_word
 
+    def set_model(self, model):
+        self.model = model
+
     def get_model(self):
         # Load pretrained model
         self.config = AutoConfig.from_pretrained(
@@ -142,26 +137,23 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
             cache_dir=self.model_args.cache_dir,
             revision=self.model_args.model_revision,
         )
-        return AutoModelForTokenClassification.from_pretrained(
+        self.model = AutoModelForTokenClassification.from_pretrained(
             self.model_args.model_name_or_path,
             from_tf=bool(".ckpt" in self.model_args.model_name_or_path),
             config=self.config,
             cache_dir=self.model_args.cache_dir,
             revision=self.model_args.model_revision,
         )
+        return self.model
 
     def get_data_collator(self):
-        return DataCollatorForTokenClassification(
-            self.tokenizer, pad_to_multiple_of=8 if self.training_args.fp16 else None
-        )
+        return DataCollatorForTokenClassification(self.tokenizer, pad_to_multiple_of=8 if self.training_args.fp16 else None)
 
     def compute_metrics(self, p):
         metric = load_metric(f"{METRICS_DIR}/questeval_word")
         raw_predictions, raw_labels = p
         raw_predictions = np.argmax(raw_predictions, axis=2)
-        preds_src, preds_tgt = self._get_true_predictions_for_source_and_target(
-            self.evaluation_dataset_for_metrics, raw_predictions, raw_labels
-        )
+        preds_src, preds_tgt = self._get_true_predictions_for_source_and_target(self.evaluation_dataset_for_metrics, raw_predictions, raw_labels)
 
         label_column_name_tgt = self.data_args.label_column_name_tgt
         label_column_name_src = self.data_args.label_column_name_src
@@ -182,10 +174,7 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
     def _get_true_predictions_for_source_and_target(self, tokenized_eval_dataset, raw_predictions, raw_labels):
         # Remove ignored index (special tokens)
         if raw_labels is not None:
-            true_predictions = [
-                [p for (p, l) in zip(prediction, label) if l != -100]
-                for prediction, label in zip(raw_predictions, raw_labels)
-            ]
+            true_predictions = [[p for (p, l) in zip(prediction, label) if l != -100] for prediction, label in zip(raw_predictions, raw_labels)]
         else:
             true_predictions = []
             for word_ids, pred_labels in zip(tokenized_eval_dataset["ids_words"], raw_predictions):
@@ -227,8 +216,6 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
 
     def postprocess_predictions(self, predictions, labels):
         predictions = np.argmax(predictions, axis=2)
-        preds_src, preds_tgt = self._get_true_predictions_for_source_and_target(
-            self.evaluation_dataset_for_metrics, predictions, labels
-        )
+        preds_src, preds_tgt = self._get_true_predictions_for_source_and_target(self.evaluation_dataset_for_metrics, predictions, labels)
         return {"predictions_src": preds_src, "predictions_tgt": preds_tgt}
 

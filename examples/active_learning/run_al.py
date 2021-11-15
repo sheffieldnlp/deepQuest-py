@@ -1,62 +1,90 @@
-"""
-Based on the example in: https://github.com/ElementAI/baal/blob/master/experiments/nlp_bert_mcdropout.py
-"""
-
-import argparse
+import logging
 import random
 from copy import deepcopy
+import sys
+import json
 
 import torch
 import torch.backends
 from tqdm import tqdm
 
-# These packages are optional and not needed for BaaL main package.
-# You can have access to `datasets` and `transformers` if you install
-# BaaL with --dev setup.
+import transformers
+
+from dataclasses import dataclass, field
+
 from datasets import load_dataset
-from transformers import BertTokenizer, TrainingArguments
-from transformers import BertForSequenceClassification
+
+from transformers import HfArgumentParser, TrainingArguments
 
 from baal.active import get_heuristic
-from baal.active.nlp_datasets import active_huggingface_dataset, HuggingFaceDatasets
+from baal.active import ActiveLearningDataset
 from baal.active.active_loop import ActiveLearningLoop
 from baal.bayesian.dropout import patch_module
 from baal.transformers_trainer_wrapper import BaalTransformersTrainer
 
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--epoch", default=100, type=int)
-    parser.add_argument("--batch_size", default=32, type=int)
-    parser.add_argument("--initial_pool", default=1000, type=int)
-    parser.add_argument("--model", default="bert-base-uncased", type=str)
-    parser.add_argument("--n_data_to_label", default=100, type=int)
-    parser.add_argument("--heuristic", default="bald", type=str)
-    parser.add_argument("--iterations", default=20, type=int)
-    parser.add_argument("--shuffle_prop", default=0.05, type=float)
-    parser.add_argument("--learning_epoch", default=20, type=int)
-    return parser.parse_args()
+from deepquestpy.commands.cli_args import DataArguments, ModelArguments
+from deepquestpy.commands.utils import DATASETS_LOADERS_DIR, get_deepquest_model
+from deepquestpy.models.base import DeepQuestModelWord
 
 
-def get_datasets(initial_pool, tokenizer):
+logger = logging.getLogger(__name__)
 
-    # To be able to support most cases, we have provided support for
-    # HuggingFace datasets. You can always create a custom wrapper for
-    # custom datasets.
-    datasets = load_dataset("glue", "sst2")
-    raw_train_set = datasets["train"]
-    raw_valid_set = datasets["validation"]
 
-    active_set = active_huggingface_dataset(raw_train_set, tokenizer)
-    valid_set = HuggingFaceDatasets(raw_valid_set, tokenizer)
+@dataclass
+class ActiveLearningArguments:
+    """
+    Arguments pertaining to the active learning loop
+    """
 
-    # We start labeling randomly.
-    active_set.label_randomly(initial_pool)
-    return active_set, valid_set
+    epoch: int = field(
+        default=1, metadata={"help": ""},
+    )
+    batch_size: int = field(
+        default=32, metadata={"help": ""},
+    )
+    initial_pool: int = field(
+        default=1000, metadata={"help": ""},
+    )
+    n_data_to_label: int = field(
+        default=100, metadata={"help": ""},
+    )
+    heuristic: str = field(
+        default="bald", metadata={"help": ""},
+    )
+    iterations: int = field(
+        default=20, metadata={"help": ""},
+    )
+    shuffle_prop: float = field(
+        default=0.05, metadata={"help": ""},
+    )
+    reduction: str = field(
+        default="mean", metadata={"help": ""},
+    )
 
 
 def main():
-    args = parse_args()
+    # Read the arguments
+    parser = HfArgumentParser((ModelArguments, DataArguments, TrainingArguments, ActiveLearningArguments))
+    model_args, data_args, training_args, activelearning_args = parser.parse_args_into_dataclasses()
+
+    # Setup logging
+    logging.basicConfig(
+        format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s", datefmt="%m/%d/%Y %H:%M:%S", handlers=[logging.StreamHandler(sys.stdout)],
+    )
+    logger.setLevel(logging.INFO if training_args.should_log else logging.WARN)
+
+    # Log on each process the small summary:
+    logger.warning(
+        f"Process rank: {training_args.local_rank}, device: {training_args.device}, n_gpu: {training_args.n_gpu}"
+        + f"distributed training: {bool(training_args.local_rank != -1)}, 16-bits training: {training_args.fp16}"
+    )
+    # Set the verbosity to info of the Transformers logger (on main process only):
+    if training_args.should_log:
+        transformers.utils.logging.set_verbosity_info()
+        transformers.utils.logging.enable_default_handler()
+        transformers.utils.logging.enable_explicit_format()
+    logger.info(f"Training/evaluation parameters {training_args}")
+
     use_cuda = torch.cuda.is_available()
     torch.backends.cudnn.benchmark = True
     random.seed(1337)
@@ -64,71 +92,131 @@ def main():
     if not use_cuda:
         print("warning, the experiments would take ages to run on cpu")
 
-    hyperparams = vars(args)
+    # Load the dataset splits
+    if data_args.dataset_name in ["mqm_google"]:
+        data_files = {}
+        if data_args.train_file is not None:
+            data_files["train"] = data_args.train_file
+        if data_args.validation_file is not None:
+            data_files["validation"] = data_args.validation_file
+        if data_args.test_file is not None:
+            data_files["test"] = data_args.test_file
+        raw_datasets = load_dataset(
+            f"{DATASETS_LOADERS_DIR}/{data_args.dataset_name}",
+            name=f"{data_args.src_lang}-{data_args.tgt_lang}",
+            data_files=data_files,
+            # download_mode="force_redownload",
+        )
+    else:
+        raise ValueError("Invalid dataset name")
 
-    heuristic = get_heuristic(hyperparams["heuristic"], hyperparams["shuffle_prop"])
+    # Create an instance of a DeepQuestModel
+    deepquest_model = get_deepquest_model(model_args.arch_name, model_args, data_args, training_args)
+    if isinstance(deepquest_model, DeepQuestModelWord):
+        for split in ["train", "validation", "test"]:
+            if split in raw_datasets:
+                features = raw_datasets[split].features
+                break
+        label_list = features[data_args.label_column_name_tgt].feature.names
+        deepquest_model.set_label_list(label_list)
 
-    model = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path=hyperparams["model"])
-    tokenizer = BertTokenizer.from_pretrained(pretrained_model_name_or_path=hyperparams["model"])
+    # Preprocess the datasets
+    if training_args.do_train:
+        if "train" not in raw_datasets:
+            raise ValueError("--do_train requires a train dataset")
+        train_dataset = raw_datasets["train"]
+        if data_args.max_train_samples is not None:
+            train_dataset = train_dataset.select(range(data_args.max_train_samples))
+        train_dataset = deepquest_model.tokenize_datasets(raw_datasets["train"], remove_columns=list(features.keys()))
 
-    # In this example we use tokenizer once only in the beginning since it would
-    # make the whole process faster. However, it is also possible to input tokenizer
-    # in trainer.
-    active_set, test_set = get_datasets(hyperparams["initial_pool"], tokenizer)
+    if training_args.do_eval:
+        if "validation" not in raw_datasets:
+            raise ValueError("--do_eval requires a validation dataset")
+        eval_dataset = raw_datasets["validation"]
+        if data_args.max_eval_samples is not None:
+            eval_dataset = eval_dataset.select(range(data_args.max_eval_samples))
+        eval_dataset = deepquest_model.tokenize_datasets(raw_datasets["validation"], remove_columns=list(features.keys()))
+        deepquest_model.set_evaluation_dataset_for_metrics(eval_dataset)
+
+    if training_args.do_predict:
+        if "test" not in raw_datasets:
+            raise ValueError("--do_predict requires a test dataset")
+        predict_dataset = raw_datasets["test"]
+        if data_args.max_predict_samples is not None:
+            predict_dataset = predict_dataset.select(range(data_args.max_predict_samples))
+        predict_dataset = deepquest_model.tokenize_datasets(raw_datasets["test"], remove_columns=list(features.keys()))
+
+    # Initialise the heuristic for active learning loop
+    heuristic = get_heuristic(name=activelearning_args.heuristic, shuffle_prop=activelearning_args.shuffle_prop, reduction=activelearning_args.reduction)
 
     # change dropout layer to MCDropout
-    model = patch_module(model)
+    model = patch_module(deepquest_model.get_model())
 
     if use_cuda:
         model.cuda()
 
     init_weights = deepcopy(model.state_dict())
 
-    training_args = TrainingArguments(
-        output_dir="./results",  # output directory
-        num_train_epochs=hyperparams["learning_epoch"],  # total # of training epochs
-        per_device_train_batch_size=16,  # batch size per device during training
-        per_device_eval_batch_size=16,  # batch size for evaluation
-        weight_decay=0.01,  # strength of weight decay
-        logging_dir="./logs",  # directory for storing logs
+    deepquest_model.set_model(model)
+
+    # We turn our training dataset into one for active learning
+    columns_to_remove = ["ids_words", "length_source", "length_target", "token_type_ids"]
+    active_set = ActiveLearningDataset(train_dataset.remove_columns(columns_to_remove))
+    # We start labeling randomly
+    active_set.label_randomly(activelearning_args.initial_pool)
+    # Initialize Trainer
+    trainer = BaalTransformersTrainer(
+        model=deepquest_model.get_model(),
+        args=training_args,
+        train_dataset=active_set,
+        eval_dataset=eval_dataset.remove_columns(columns_to_remove),
+        tokenizer=deepquest_model.get_tokenizer(),
+        data_collator=deepquest_model.get_data_collator(),
+        compute_metrics=deepquest_model.compute_metrics,
     )
 
-    # We wrap the huggingface Trainer to create an Active Learning Trainer
-    model = BaalTransformersTrainer(model=model, args=training_args, train_dataset=active_set, eval_dataset=test_set, tokenizer=None,)
+    logs = []
 
-    logs = {}
-    logs["epoch"] = 0
-
-    # In this case, nlp data is fast to process and we do NoT need to use a smaller batch_size
     active_loop = ActiveLearningLoop(
-        active_set, model.predict_on_dataset, heuristic, hyperparams.get("n_data_to_label", 1), iterations=hyperparams["iterations"],
+        dataset=active_set,
+        get_probabilities=trainer.predict_on_dataset,
+        heuristic=heuristic,
+        ndata_to_label=activelearning_args.n_data_to_label,
+        max_sample=50,
+        iterations=activelearning_args.iterations,
     )
 
-    for epoch in tqdm(range(args.epoch)):
+    for epoch in tqdm(range(activelearning_args.epoch)):
         # we use the default setup of HuggingFace for training (ex: epoch=1).
         # The setup is adjustable when BaalHuggingFaceTrainer is defined.
-        model.train()
+        trainer.train()
 
         # Validation!
-        eval_metrics = model.evaluate()
+        eval_metrics = trainer.evaluate()
 
         # We reorder the unlabelled pool at the frequency of learning_epoch
         # This helps with speed while not changing the quality of uncertainty estimation.
         should_continue = active_loop.step()
 
         # We reset the model weights to relearn from the new trainset.
-        model.load_state_dict(init_weights)
-        model.lr_scheduler = None
+        trainer.load_state_dict(init_weights)
+        trainer.lr_scheduler = None
         if not should_continue:
             break
         active_logs = {
             "epoch": epoch,
-            "labeled_data": active_set._labelled,
+            # "labeled_data": active_set._labelled,
             "Next Training set size": len(active_set),
         }
 
-        logs = {**eval_metrics, **active_logs}
-        print(logs)
+        train_logs = {**eval_metrics, **active_logs}
+        print(train_logs)
+        logs.append(train_logs)
+    trainer.log_metrics("validation", eval_metrics)
+    trainer.save_metrics("validation", eval_metrics)
+
+    with open(f"{training_args.output_dir}/logs.json", "w") as f:
+        json.dump(logs, f)
 
 
 if __name__ == "__main__":

@@ -29,11 +29,7 @@ class MQMGoogleConfig(datasets.BuilderConfig):
 class MQMGoogle(datasets.GeneratorBasedBuilder):
     BUILDER_CONFIGS = [
         MQMGoogleConfig(
-            name=f"{src_lg}-{tgt_lg}",
-            version=datasets.Version("0.0.1"),
-            description=f"Google MQM: {src_lg} - {tgt_lg}",
-            src_lg=src_lg,
-            tgt_lg=tgt_lg,
+            name=f"{src_lg}-{tgt_lg}", version=datasets.Version("0.0.1"), description=f"Google MQM: {src_lg} - {tgt_lg}", src_lg=src_lg, tgt_lg=tgt_lg,
         )
         for (src_lg, tgt_lg) in _LANGUAGE_PAIRS
     ]
@@ -76,7 +72,6 @@ class MQMGoogle(datasets.GeneratorBasedBuilder):
         return generators
 
     def _generate_examples(self, filepath, split, source_lg, target_lg):
-        logging.info("Generating examples")
         df_translations = pd.read_csv(filepath)
         for id, row in df_translations.iterrows():
             yield id, {
