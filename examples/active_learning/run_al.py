@@ -160,7 +160,7 @@ def main():
     deepquest_model.set_model(model)
 
     # We turn our training dataset into one for active learning
-    columns_to_remove = ["ids_words", "length_source", "length_target", "token_type_ids"]
+    columns_to_remove = ["ids_words", "length_source", "length_target"]
     active_set = ActiveLearningDataset(train_dataset.remove_columns(columns_to_remove))
     # We start labeling randomly
     active_set.label_randomly(activelearning_args.initial_pool)

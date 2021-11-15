@@ -92,7 +92,7 @@ class TransformerDeepQuestModelWord(DeepQuestModelWord):
                 label_src = None
                 label_tgt = batch_tokens_labels
             # remove the labels for GAPS in target
-            if not labels_in_gaps:
+            if labels_in_gaps:
                 label_tgt = [l for j, l in enumerate(label_tgt) if j % 2 != 0]
 
             label = label_src
