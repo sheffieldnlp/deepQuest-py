@@ -138,8 +138,9 @@ def main():
         eval_dataset = raw_datasets["validation"]
         if data_args.max_eval_samples is not None:
             eval_dataset = eval_dataset.select(range(data_args.max_eval_samples))
-        eval_dataset = deepquest_model.tokenize_datasets(raw_datasets["validation"], remove_columns=list(features.keys()))
+        eval_dataset = deepquest_model.tokenize_datasets(raw_datasets["validation"])
         deepquest_model.set_evaluation_dataset_for_metrics(eval_dataset)
+        eval_dataset = eval_dataset.remove_columns(list(features.keys()))
 
     if training_args.do_predict:
         if "test" not in raw_datasets:
