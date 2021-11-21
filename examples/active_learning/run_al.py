@@ -36,23 +36,23 @@ class ActiveLearningArguments:
     Arguments pertaining to the active learning loop
     """
 
-    epoch: int = field(
-        default=100, metadata={"help": ""},
+    active_epochs: int = field(
+        default=25, metadata={"help": ""},
     )
     batch_size: int = field(
         default=32, metadata={"help": ""},
     )
     initial_pool: int = field(
-        default=1000, metadata={"help": ""},
+        default=562, metadata={"help": ""},
     )
     n_data_to_label: int = field(
-        default=100, metadata={"help": ""},
+        default=562, metadata={"help": ""},
     )
     heuristic: str = field(
         default="bald", metadata={"help": ""},
     )
-    iterations: int = field(
-        default=20, metadata={"help": ""},
+    stochastic_preds: int = field(
+        default=10, metadata={"help": ""},
     )
     shuffle_prop: float = field(
         default=0.05, metadata={"help": ""},
@@ -187,10 +187,10 @@ def main():
         heuristic=heuristic,
         ndata_to_label=activelearning_args.n_data_to_label,
         max_sample=activelearning_args.max_sample,
-        iterations=activelearning_args.iterations,
+        iterations=activelearning_args.stochastic_preds,
     )
 
-    for epoch in tqdm(range(activelearning_args.epoch)):
+    for active_epoch in tqdm(range(activelearning_args.active_epochs)):
         # we use the default setup of HuggingFace for training (ex: epoch=1).
         # The setup is adjustable when BaalHuggingFaceTrainer is defined.
         trainer.train()
@@ -208,7 +208,7 @@ def main():
         if not should_continue:
             break
         active_logs = {
-            "epoch": epoch,
+            "active_epoch": active_epoch,
             # "labeled_data": active_set._labelled,
             "Next Training set size": len(active_set),
         }
