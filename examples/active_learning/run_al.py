@@ -63,6 +63,9 @@ class ActiveLearningArguments:
     max_sample: int = field(
         default=-1, metadata={"help": ""},
     )
+    uncertainty_folder: str = field(
+        default=None, metadata={"help": ""},
+    )
 
 
 def main():
@@ -187,6 +190,7 @@ def main():
         heuristic=heuristic,
         ndata_to_label=activelearning_args.n_data_to_label,
         max_sample=activelearning_args.max_sample,
+        uncertainty_folder=activelearning_args.uncertainty_folder,
         iterations=activelearning_args.stochastic_preds,
     )
 
@@ -194,9 +198,13 @@ def main():
         # we use the default setup of HuggingFace for training (ex: epoch=1).
         # The setup is adjustable when BaalHuggingFaceTrainer is defined.
         trainer.train()
+        trainer.save_model()
+        trainer.save_state()
 
         # Validation!
         eval_metrics = trainer.evaluate()
+        trainer.log_metrics("validation", eval_metrics)
+        trainer.save_metrics("validation", eval_metrics)
 
         # We reorder the unlabelled pool at the frequency of learning_epoch
         # This helps with speed while not changing the quality of uncertainty estimation.
@@ -216,8 +224,6 @@ def main():
         train_logs = {**eval_metrics, **active_logs}
         print(train_logs)
         logs.append(train_logs)
-    trainer.log_metrics("validation", eval_metrics)
-    trainer.save_metrics("validation", eval_metrics)
 
     with open(f"{training_args.output_dir}/logs.json", "w") as f:
         json.dump(logs, f)
